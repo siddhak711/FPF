@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /* Basic Reset */
 * {
     margin: 0;
@@ -6,6 +7,8 @@
 }
 
 /* Body Styling */
+=======
+>>>>>>> 5754e8da9b86cff47be2006c01d99fc408c8b08e
 body {
     font-family: Arial, sans-serif;
     margin: 0;
@@ -13,6 +16,7 @@ body {
     background-color: #f4f4f4;
 }
 
+<<<<<<< HEAD
 /* Header and Navigation Styling */
 header {
     background-color: #333;
@@ -67,6 +71,15 @@ header {
 }
 
 /* Main Content Styling */
+=======
+header, footer {
+    background-color: #333;
+    color: white;
+    text-align: center;
+    padding: 1em;
+}
+
+>>>>>>> 5754e8da9b86cff47be2006c01d99fc408c8b08e
 main {
     padding: 2em;
 }
@@ -74,6 +87,7 @@ main {
 h1, h2 {
     color: #333;
 }
+<<<<<<< HEAD
 
 /* Footer Styling */
 footer {
@@ -109,3 +123,5 @@ footer {
         color: white;
     }
 }
+=======
+>>>>>>> 5754e8da9b86cff47be2006c01d99fc408c8b08e
