@@ -1,90 +1,115 @@
-/* Basic Reset */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+/* styles.css */
 
-/* Body Styling */
 body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f4f4f4;
+    font-family: 'Questrial', sans-serif;
 }
 
-/* Header and Navigation Styling */
 header {
-    background-color: #333;
-    color: white;
-    padding: 1em 0;
+    background-color: #3e7041; /* Desired background color */
+    font-family: 'Questrial', sans-serif;
+    background-opacity: 0.75;
+    backdrop-blur: 10px;
+    border-radius: 1rem;
 }
 
-.navbar {
+#met1, #guest, #library {
+    position: relative;
+    text-align: center;
+    color: white;
+}
+
+.sponsors {
+    position: relative;
+    text-align: center;
+    color: white;
+}
+
+.bottom-right {
+    position: absolute;
+    bottom: 8px;
+    right: 16px;
+    padding: 20px;
+}
+
+.image-container {
+    width: 100%;
+    height: auto;
+}
+
+.image-container img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    opacity: 0.25;
+}
+
+ul {
+    width: 100%;
+    height: auto;
+}
+
+.top-left {
+    position: absolute;
+    top: 8px;
+    left: 16px;
+}
+
+.containero {
+    transition: transform 0.3s ease-in-out;
+}
+
+.containero:hover {
+    transform: scale(1.1);
+}
+
+.title {
+    font-family: 'Archivo Medium', sans-serif;
+}
+
+.pages {
+    transition: transform 0.3s ease-in-out;
+}
+
+.pages:hover {
+    transform: scale(1.1);
+    color: #3e7041;
+}
+
+footer {
+    background-color: #2925257a;
+    padding: 100px;
+}
+
+.contact-icons {
+    background-color: rgba(0, 0, 0, 0.75); /* Darker background */
+    border-radius: 10px;
+    padding: 1%;
     display: flex;
-    justify-content: space-between;
+    justify-content: space-around;
     align-items: center;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 1em;
+    margin-top: 20px; /* Adjust margin as needed */
+    width: fit-content;
 }
 
-.logo a {
-    color: white;
-    text-decoration: none;
-    font-size: 1.5em;
-}
-
-.nav-links {
-    list-style: none;
+.contact-icons a {
     display: flex;
+    align-items: center;
+    transition: transform 0.2s;
 }
 
-.nav-links li {
-    margin-left: 2em;
+.contact-icons a:hover {
+    transform: scale(1.15);
 }
 
-.nav-links a {
-    color: white;
-    text-decoration: none;
-    font-size: 1em;
-    transition: color 0.3s;
+.contact-icons img {
+    width: 125px;
+    height: 60px;
+    margin: 0 10px;
 }
 
-.nav-links a:hover {
-    color: #ddd;
-}
-
-/* Mobile Navigation Toggle */
-.menu-icon {
-    display: none;
-    font-size: 2em;
-    cursor: pointer;
-    color: white;
-}
-
-#menu-toggle {
-    display: none;
-}
-
-#menu-toggle:checked + .nav-links {
-    display: block;
-}
-
-/* Responsive Navigation */
-@media (max-width: 768px) {
-    .nav-links {
-        display: none;
-        flex-direction: column;
-        width: 100%;
-    }
-    
-    .nav-links li {
-        margin: 1em 0;
-        text-align: center;
-    }
-    
-    .menu-icon {
-        display: block;
-    }
+.gmail-icon-background {
+    background-color: rgba(0, 0, 0, 0.75); /* Darker background */
+    border-radius: 10px;
+    padding: 10px; /* Add padding if necessary */
+    display: inline-block; /* Ensures the div wraps around the image */
 }
