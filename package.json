@@ -1,0 +1,23 @@
+{
+  "name": "fpf",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build:css": "tailwindcss build src/styles.css -o public/styles.css"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/siddhak711/FPF.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/siddhak711/FPF/issues"
+  },
+  "homepage": "https://github.com/siddhak711/FPF#readme",
+  "dependencies": {
+    "tailwindcss": "^3.4.8"
+  }
+}

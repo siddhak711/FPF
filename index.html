@@ -6,7 +6,7 @@
     <title>Home</title>
     <link rel="icon" href="images/favicon.ico" type="image/x-icon" />
     <link href="./dist/output.css" rel="stylesheet" />
-    <link href="index.css" rel="stylesheet" />
+    <link href="public/styles.css" rel="stylesheet">
     <link
       href="https://cdn.jsdelivr.net/npm/daisyui@3.9.4/dist/full.css"
       rel="stylesheet"
@@ -82,6 +82,16 @@
           transform: scale(1.1);
           color: #3e7041;
       }
+      .problem-section {
+      margin-top: 0px;
+      padding-bottom: 0;
+      margin-bottom: 0px;
+      }
+
+      .mission-section {
+      margin-top: 0px;
+      padding-top: 0;
+      }
     </style>
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -127,16 +137,11 @@
         >
       </div>
       <div id="fainavlinks-donate" class="hidden px-5 sm:pt-2 pb-4 sm:flex">
-        <a
-          target="_blank"
-          href="http://linktr.ee/faiapp"
-          class="text-white text-base block sm:inline-block font-light rounded px-2 py-1 mt-3 transition ease-in-out delay-150 duration-300 hover:scale-110"
-          >Join Us</a
-        >
+        
       </div>
     </header>
 
-    <div class="relative h-[120vh] lg:h-[150vh] flex flex-col items-center text-center">
+    <div class="relative h-[120vh] lg:h-[100vh] flex flex-col items-center text-center">
       <!-- Background Image -->
       <div class="absolute inset-0">
         <div class="bg-cover bg-center bg-no-repeat h-full w-full opacity-25" style="background-image: url('images/home_background.jpg');"></div>
@@ -147,9 +152,48 @@
         <p class="text-7xl text-[#3e7041] font-bold mb-2 title">Frisco Pollen Free Initiative</p>
         <p class="text-3xl text-white">Fighting for Frisco's Pollen Free Tomorrow</p>
       </div>
-      
+    </div>
+    <!-- Problem Section -->
+    <div class="relative lg:flex justify-left items-center bg-[#3e7041] text-white lg:pl-10 px-8 lg:px-0 problem-section">
+      <div class="relative lg:w-7/12 z-10 lg:pl-20">
+        <h3 class="lg:text-6xl text-4xl font-extrabold text-white mb-4 mt-16 lg:text-left text-center title">Problem </h3>
+        <p class="text-[18px] lg:text-left lg:mb-20">
+          Pollen allergies are a growing public health concern as they seem to get worse every year, particularly in urban areas where the prevalence of male trees contributes to high pollen levels. These trees, favored for their lack of fruit and seeds, release large amounts of pollen into the air, exacerbating allergy symptoms for millions of people. Chronic exposure to high pollen levels can lead to severe allergic reactions, asthma flare-ups, and a significant reduction in quality of life. Dallas, which ranks as the fourth most challenging city in the U.S. for seasonal allergies, exemplifies the urgency of this issue. As cities like Frisco continue to grow, it's crucial to address this problem through strategic urban planning, including planting more female trees, which do not produce pollen. By taking action now, we can reduce pollen levels, improve public health, and create a more livable environment for everyone.
+        </p>
+      </div>
+      <div class="relative lg:w-5/12 z-10 lg:px-8">
+        <div class="overflow-hidden flex justify-center items-center">
+          <img src="images/problem_image.png">
+        </div>
+      </div>
     </div>
     
+
+    <!-- Mission Section -->
+    <div class="py-16 px-8 bg-white md:flex justify-center items-center mission-section ">
+      <div class="md:w-1/3 lg:pr-8 self-center">
+        <img src="images/mission_image.png">
+      </div>
+      <div class="md:w-2/3 lg:pr-20">
+        <h3 class="lg:text-6xl text-3xl font-extrabold text-[#3e7041] mb-4">
+          <p class="text-center lg:text-right title">Mission</p>
+        </h3>
+        <p class="text-[18px] text-[#3e7041] lg:text-right mb-5 lg:mb-0">
+          The Frisco Pollen Free Initiative is committed to transforming Frisco into a healthier, more livable city by significantly reducing pollen levels. Our mission centers on promoting the strategic planting of female trees, which do not produce pollen, as a proactive measure to combat the escalating problem of pollen allergies. By addressing the root causes of high pollen levels, we aim to reduce allergy-related health issues, enhance public well-being, and improve the overall quality of life for all residents. We believe that through education, advocacy, and active community involvement, we can create a greener, healthier, and more sustainable future for Frisco. Our initiative is not just about planting trees; it's about cultivating a community that values long-term health, environmental stewardship, and a better living environment for everyone.
+        </p>
+      </div>
+    </div>
+
+    <!-- Possible Solutions Section --> <!-- Side note: try to see if you can get the screen to shift when clicking on this-->
+    <a style="text-decoration: none;width: 100%;height: 15em;background-color: #3e7041;z-index: 999999; " target="_blank">
+      <div style="background-color: #3e7041; width: 100%; " class="text-center flex flex-col justify-center items-center h-full w-full transition ease-in-out duration-300 hover:scale-105 p-3">
+          <p class="text-white md:text-7xl text-4xl font-extrabold  mb-16 mt-16 pb-4 title">Our Possible Solutions</p>
+      </div>
+    </a>
+    <!-- Figure out how to add the two half-sections here-->
+
+
+    <!-- Footer -->
     <footer class="bg-veryDarkBlue" style="background-color: #2925257a;">
       <div class="container flex flex-col-reverse justify-between px-6 py-10 mx-auto space-y-8 md:flex-row md:space-y-0" style="padding: 100px;">
         <div class="flex flex-col-reverse items-center justify-between space-y-12 md:flex-col md:space-y-0 md:items-start">
@@ -189,5 +233,3 @@
 
   </body>
 </html>
-
-

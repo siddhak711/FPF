@@ -9,6 +9,8 @@
             "request": "launch",
             "name": "Open index.html",
             "file": "/Users/siddha/FPF/index.html"
+            
         }
     ]
+    
 }
