@@ -12,11 +12,11 @@
       rel="stylesheet"
       type="text/css"
     />
-    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Questrial&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <style>
       header {
           background-color: #3e7041; /* Change this to your desired color */
-          font-family: 'Questrial', sans-serif;
+          font-family: 'Montserrat', sans-serif; /* Changed to Montserrat */
           background-opacity: 0.75;
           backdrop-blur: 10px;
           border-radius: 1rem;
@@ -69,10 +69,10 @@
           transform: scale(1.1);
       }
       .title {
-          font-family: 'Archivo Medium', sans-serif;
+        font-family: 'Montserrat', sans-serif; /* Changed to Montserrat */
       }
       body {
-          font-family: 'Questrial', sans-serif;
+        font-family: 'Montserrat', sans-serif; /* Changed to Montserrat */
       }
       .pages {
           transition: transform 0.3s ease-in-out;
@@ -133,7 +133,7 @@
           z-index: -1;
       }
       .title {
-          font-family: 'Archivo Black', sans-serif;
+        font-family: 'Montserrat', sans-serif; /* Changed to Montserrat */
           font-size: 1.5em;
           color: white;
           margin-bottom: 1%;
@@ -316,17 +316,20 @@
       </div>
     </header>
     <div class="relative h-[120vh] lg:h-[150vh] flex flex-col items-center text-center">
-        <!-- Background Image -->
-        <div class="absolute inset-0">
-          <div class="bg-cover bg-center bg-no-repeat h-full w-full opacity-25" style="background-image: url('images/podcasts_background.jpg');"></div>
-        </div>
-        
-        <!-- Main Content  -->
-        <div class="relative z-10 top-[45vh]">
-          <p class="text-7xl text-white font-bold mb-2 title">Podcasts</p>
+      <!-- Background Image -->
+      <div class="absolute inset-0">
+          <div class="bg-cover bg-center bg-no-repeat h-full w-full" style="background-image: url('images/podcasts_background.jpg');">
+              <div class="absolute inset-0 bg-black opacity-50"></div> <!-- This adds a dark overlay -->
+          </div>
+      </div>
+      
+      <!-- Main Content  -->
+      <div class="relative z-10 justify-center top-[45vh]">
+          <p class="text-7xl text-white text-center font-bold mb-2 title">Podcasts</p>
           <p class="text-3xl text-white">Learn from allergy experts on how we can make Frisco Pollen Free!</p>
-        </div>
-    </div>
+      </div>
+  </div>
+  
     <div class="segment green">
           <div class="content-wrapper">
               <div class="title">06/19/2024 - Aakash Shah, CEO of Wyndly</div>

@@ -6,7 +6,7 @@
 body {
     margin: 0px;
     padding: 0px;
-    font-family: 'Questrial', sans-serif;
+    font-family: 'Montserrat', sans-serif; /* Changed to Montserrat */
 }
 
 #blog{
@@ -33,7 +33,7 @@ body {
 }
 header{
     background-color: #3e7041; /* Desired background color */
-    font-family: 'Questrial', sans-serif;
+    font-family: 'Montserrat', sans-serif; /* Changed to Montserrat */
     background-opacity: 0.75;
     backdrop-blur: 10px;
     border-radius: 1rem;
@@ -91,7 +91,7 @@ ul {
 }
 
 .title {
-    font-family: 'Archivo Medium', sans-serif;
+    font-family: 'Montserrat', sans-serif; /* Changed to Montserrat */
     color: #3e7041;
 }
 

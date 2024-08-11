@@ -70,7 +70,7 @@
 
 header {
     background-color: #3e7041; /* Change this to your desired color */
-    font-family: 'Questrial', sans-serif;
+    font-family: 'Montserrat', sans-serif; /* Changed to Montserrat */
     background-opacity: 0.75;
     backdrop-blur: 10px;
     border-radius: 1rem;
