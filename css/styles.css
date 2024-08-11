@@ -4,10 +4,34 @@
 @tailwind utilities;
 
 body {
+    margin: 0px;
+    padding: 0px;
     font-family: 'Questrial', sans-serif;
 }
 
-header {
+#blog{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    padding: 40px;
+    border-bottom: 1px sold rgba(0, 0, 0, 0.05);
+}
+.blog-heading{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+.blog-heading span{
+    color: #3e7041;
+}
+.blog-heading h3{
+    font-size: 2.4rem;
+    color: #2b2b2b;
+    font-weight: 600;
+}
+header{
     background-color: #3e7041; /* Desired background color */
     font-family: 'Questrial', sans-serif;
     background-opacity: 0.75;
@@ -49,6 +73,7 @@ header {
 ul {
     width: 100%;
     height: auto;
+    list-style: none;
 }
 
 .top-left {
@@ -116,4 +141,7 @@ footer {
     border-radius: 10px;
     padding: 10px; /* Add padding if necessary */
     display: inline-block; /* Ensures the div wraps around the image */
+}
+a{
+    text-decoration: none;
 }
