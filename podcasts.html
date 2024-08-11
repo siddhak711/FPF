@@ -82,6 +82,183 @@
           transform: scale(1.1);
           color: #3e7041;
       }
+      .segment {
+          width: 100%;
+          display: flex;
+          align-items: flex-end;
+          padding: 3%;
+          box-sizing: border-box;
+          position: relative;
+      }
+      .black {
+          background-color: black;
+          color: white;
+          text-align: right;
+          justify-content: flex-end;
+          padding-top: 10%;
+          position: relative;
+      }
+      .black.first {
+          height: 100vh;
+          background-image: url('images/faiWithBlack.JPG');
+          background-size: cover;
+          background-position: center;
+          background-attachment: fixed;
+          position: relative;
+          z-index: 1;
+      }
+      .black.first::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.75);
+          z-index: -1;
+      }
+      .green {
+          background-color: #3e7041;
+          color: black;
+          text-align: left;
+          justify-content: flex-start;
+          position: relative;
+      }
+      .green::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.3);
+          z-index: -1;
+      }
+      .title {
+          font-family: 'Archivo Black', sans-serif;
+          font-size: 2.5em;
+          margin-bottom: 1%;
+          word-wrap: break-word;
+          max-width: 50%;
+      }
+      .body-text {
+          font-size: 1.2em;
+          max-width: 50%;
+          word-wrap: break-word;
+      }
+      .black .title {
+          color: #FFDE5A;
+      }
+      .content-wrapper {
+          max-width: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          margin-right: auto;
+      }
+      .black .content-wrapper {
+          align-items: flex-end;
+      }
+      .green .content-wrapper {
+          align-items: flex-start;
+      }
+      .video-container {
+          position: relative;
+          width: 100%;
+          padding-top: 56.25%; /* 16:9 Aspect Ratio (iframe video) */
+          margin-top: 0; /* Removed margin */
+          margin-bottom: -17%; /* Added margin */
+      }
+      .video-wrapper {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 70%; /* Adjust width as needed */
+          height: 70%; /* Adjust height as needed */
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          border-radius: 20px;
+          overflow: hidden;
+          box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+      }
+      .video-wrapper iframe {
+          width: 100%;
+          height: 100%;
+          border: none;
+      }
+      .video-wrapper-right {
+          right: 0;
+          left: auto;
+      }
+      .icons-container-green {
+          background-color: #3e7041;
+          border-radius: 20px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          padding: 5px;
+          width: fit-content;
+          margin-top: 10px; /* Adjust margin as needed */
+          margin: 1%;
+      }
+      .icons-container-black {
+          background-color: #000000;
+          border-radius: 20px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          padding: 5px;
+          width: fit-content;
+          margin-top: 10px; /* Adjust margin as needed */
+          margin: 1%;
+      }
+      .icons {
+          display: flex;
+          justify-content: flex-start;
+          align-items: center;
+          gap: 10px; /* Added gap between icons */
+      }
+      .icon {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          text-decoration: none; /* Ensure no underline for links */
+          color: black; /* Adjust color as needed */
+          position: relative;
+          overflow: hidden;
+      }
+      .icon img {
+          width: 40px;
+          height: 40px;
+          padding: 5px;
+          transition: transform 0.3s ease;
+          z-index: 1;
+      }
+      .icon:hover img {
+          transform: scale(1.2); /* Scale up on hover */
+      }
+      .icon .text {
+          position: absolute;
+          top: 50%;
+          left: 110%;
+          transform: translateY(-50%);
+          background-color: rgba(255, 255, 255, 0.9);
+          padding: 5px 10px;
+          border-radius: 5px;
+          white-space: nowrap;
+          visibility: hidden;
+          opacity: 0;
+          transition: opacity 0.3s, visibility 0s linear 0.3s;
+          z-index: 0;
+      }
+      .icon:hover .text {
+          visibility: visible;
+          opacity: 1;
+          transition-delay: 0s;
+          z-index: 2;
+      }
+      
     </style>
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -180,7 +357,7 @@
             <div class="mx-auto my-6 text-center text-white md:hidden">
               Add Copyright Stamp
             </div>
-            <div class="container" style="justify-content: center;">
+            <div class="containero" style="justify-content: center;">
               <img src="images/favicon.png" class="h-12" alt="" style="height: 125px;"/>
             </div>
             <div class="flex justify-center space-x-4" style="padding-top: 40px;">
