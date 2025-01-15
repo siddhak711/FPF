@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="black">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Blogs</title>
+    <link rel="icon" href="images/favicon.ico" type="image/x-icon" />
+    <link href="./dist/output.css" rel="stylesheet" />
+    <link href="public/styles.css" rel="stylesheet">
+    <link
+      href="https://cdn.jsdelivr.net/npm/daisyui@3.9.4/dist/full.css"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <style>
+      header {
+          background-color: #3e7041; /* Change this to your desired color */
+          font-family: 'Montserrat', sans-serif; /* Changed to Montserrat */
+          background-opacity: 0.75;
+          backdrop-blur: 10px;
+          border-radius: 1rem;
+      }
+    
+      #met1, #guest, #library {
+        position: relative;
+        text-align: center;
+        color: white;
+      }
+      .sponsors {
+        position: relative;
+        text-align: center;
+        color: white;
+      }
+      
+      .bottom-right {
+        position: absolute;
+        bottom: 8px;
+        right: 16px;
+        padding: 20px;
+      }
+      
+      .image-container {
+          width: 100%;
+          height: auto;
+      }
+      .image-container img {
+          width: 100%;
+          height: auto;
+          object-fit: contain;
+          opacity: 0.25;
+      }
+      ul {
+          width: 100%;
+          height: auto;
+      }
+      
+      .top-left {
+        position: absolute;
+        top: 8px;
+        left: 16px;
+      }
+
+      .containero {
+          transition: transform 0.3s ease-in-out;
+      }
+
+      .containero:hover {
+          transform: scale(1.1);
+      }
+      .title {
+        font-family: 'Montserrat', sans-serif; /* Changed to Montserrat */
+      }
+      body {
+        font-family: 'Montserrat', sans-serif; /* Changed to Montserrat */
+      }
+      .pages {
+          transition: transform 0.3s ease-in-out;
+      }
+
+      .pages:hover {
+          transform: scale(1.1);
+          color: #3e7041;
+      }
+      .segment {
+          width: 100%;
+          align-items: flex-end;
+          padding: 3%;
+          box-sizing: border-box;
+      }
+      .black {
+          background-color: black;
+          color: white;
+          text-align: right;
+          justify-content: flex-end;
+          padding-top: 10%;
+          position: relative;
+      }
+      .black.first {
+          height: 100vh;
+          background-image: url('images/faiWithBlack.JPG');
+          background-size: cover;
+          background-position: center;
+          background-attachment: fixed;
+          position: relative;
+          z-index: 1;
+      }
+      .black.first::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.75);
+          z-index: -1;
+      }
+      .green {
+          background-color: #3e7041;
+          color: black;
+          text-align: left;
+          justify-content: flex-start;
+          position: relative;
+      }
+      .green::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.3);
+          z-index: -1;
+      }
+      .title {
+        font-family: 'Montserrat', sans-serif; /* Changed to Montserrat */
+          font-size: 1.5em;
+          color: white;
+          margin-bottom: 1%;
+          word-wrap: break-word;
+      }
+      .body-text {
+          font-size: 1.2em;
+          color: white;
+          max-width: 100%;
+          word-wrap: break-word;
+      }
+      .black .title {
+          color: white;
+      }
+      .content-wrapper {
+          max-width: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          margin-right: auto;
+      }
+      .black .content-wrapper {
+          align-items: flex-end;
+      }
+      .green .content-wrapper {
+          align-items: flex-start;
+      }
+      .video-container {
+          position: relative;
+          width: 100%;
+          padding-top: 56.25%; /* 16:9 Aspect Ratio (iframe video) */
+          margin-top: 0; /* Removed margin */
+          margin-bottom: -17%; /* Added margin */
+      }
+      .video-wrapper {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 70%; /* Adjust width as needed */
+          height: 70%; /* Adjust height as needed */
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          border-radius: 20px;
+          overflow: hidden;
+          box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+      }
+      .video-wrapper iframe {
+          width: 100%;
+          height: 100%;
+          border: none;
+      }
+      .video-wrapper-right {
+          right: 0;
+          left: auto;
+      }
+      .icons-container-green {
+          background-color: #3e7041;
+          border-radius: 20px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          padding: 5px;
+          width: fit-content;
+          margin-top: 10px; /* Adjust margin as needed */
+          margin: 1%;
+      }
+      .icons-container-black {
+          background-color: #000000;
+          border-radius: 20px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          padding: 5px;
+          width: fit-content;
+          margin-top: 10px; /* Adjust margin as needed */
+          margin: 1%;
+      }
+      .icons {
+          display: flex;
+          justify-content: flex-start;
+          align-items: center;
+          gap: 10px; /* Added gap between icons */
+      }
+      
+      .icon {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          text-decoration: none; /* Ensure no underline for links */
+          color: black; /* Adjust color as needed */
+          position: relative;
+          overflow: hidden;
+      }
+      .icon img {
+          width: 40px;
+          height: 40px;
+          padding: 5px;
+          transition: transform 0.3s ease;
+          z-index: 1;
+      }
+      .icon:hover img {
+          transform: scale(1.2); /* Scale up on hover */
+      }
+      .icon .text {
+          position: absolute;
+          top: 50%;
+          left: 110%;
+          transform: translateY(-50%);
+          background-color: rgba(255, 255, 255, 0.9);
+          padding: 5px 10px;
+          border-radius: 5px;
+          white-space: nowrap;
+          visibility: hidden;
+          opacity: 0;
+          transition: opacity 0.3s, visibility 0s linear 0.3s;
+          z-index: 0;
+      }
+      .icon:hover .text {
+          visibility: visible;
+          opacity: 1;
+          transition-delay: 0s;
+          z-index: 2;
+      }
+      .featured-blog {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 2rem;
+          padding: 3%;
+      }
+
+      .featured-blog .blog-card {
+          background-color: #1c1c1c;
+          border-radius: 10px;
+          display: flex;
+          flex-direction: row;
+          width: 100%;
+          height: auto;
+          position: relative;
+          overflow: hidden;
+      }
+
+      .a-img {
+          height: 1em;
+          width: auto;
+          margin-left: 0.5em;
+          transition: transform 0.3s ease-in-out;
+      }
+
+      .featured-blog .blog-card .image-container {
+          width: 40%;
+          height: auto;
+          overflow: hidden;
+      }
+
+      .featured-blog .blog-card .image {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          object-position: center;
+          border-top-left-radius: 10px;
+          border-bottom-left-radius: 10px;
+      }
+
+      .featured-blog .blog-card .content {
+          width: 60%;
+          position: relative;
+          padding: 1rem;
+          color: #ffffff;
+      }
+
+      .regular-blog-cards .blog-card .content .datetag {
+          background-color: #3e7041;
+          color: #ffffff;
+          font-size: 0.75rem;
+          font-weight: 600;
+          padding: 0.25rem 0.5rem;
+          border-radius: 5px;
+          margin-bottom: 0.5rem;
+          display: inline-block;
+      }
+
+      .featured-blog .blog-card .content h2 {
+        font-family: 'Montserrat', sans-serif; /* Changed to Montserrat */
+          font-size: 1.5rem;
+          font-weight: 600;
+          margin-bottom: 0.5rem;
+          color: #3e7041;
+      }
+
+      .featured-blog .blog-card .content .tag {
+          background-color: #3e7041;
+          color: #ffffff;
+          font-size: 0.75rem;
+          font-weight: 600;
+          padding: 0.25rem 0.5rem;
+          border-radius: 5px;
+          margin-bottom: 0.5rem;
+          display: inline-block;
+      }
+
+      .featured-blog .blog-card .content .description {
+          margin-top: 1rem;
+          overflow: hidden;
+          position: relative;
+          line-height: 1.4;
+          max-height: 200px;
+          mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+          -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+      }
+
+      .featured-blog .blog-card .content .description::after {
+          content: '';
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          height: 6rem;
+          background: linear-gradient(transparent, #1c1c1c);
+      }
+
+      .featured-blog .blog-card .content .read-more,
+      .regular-blog-cards .blog-card .content .read-more {
+          position: absolute;
+          bottom: 0.5rem;
+          left: 1rem;
+          display: inline-flex;
+          align-items: center;
+          color: #3e7041;
+          font-weight: 600;
+          text-decoration: none;
+          width: fit-content;
+          transition: all 0.3s ease-in-out;
+          padding: 5px 10px;
+          border-radius: 20px;
+      }
+
+      .featured-blog .blog-card .content .read-more:hover,
+      .regular-blog-cards .blog-card .content .read-more:hover {
+          background-color: rgba(255, 222, 90, 0.1);
+          padding: 5px 15px;
+      }
+
+      .featured-blog .blog-card .content .read-more span,
+      .regular-blog-cards .blog-card .content .read-more span {
+          transition: transform 0.3s ease-in-out;
+          display: inline-flex;
+          align-items: center;
+      }
+
+      .featured-blog .blog-card .content .read-more:hover span,
+      .regular-blog-cards .blog-card .content .read-more:hover span {
+          transform: translateX(5px);
+      }
+
+      .featured-blog .blog-card .content .read-more:hover .a-img,
+      .regular-blog-cards .blog-card .content .read-more:hover .a-img {
+          transform: translateX(5px);
+      }
+
+      .regular-blog-cards {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 2rem;
+          padding: 3%;
+      }
+
+      .regular-blog-cards .blog-card {
+          background-color: #1c1c1c;
+          border-radius: 10px;
+          display: flex;
+          flex-direction: column;
+          position: relative;
+          overflow: hidden;
+      }
+
+      .regular-blog-cards .blog-card .image {
+          height: 200px;
+          width: 100%;
+          border-top-left-radius: 10px;
+          border-top-right-radius: 10px;
+          object-fit: cover;
+      }
+
+      .regular-blog-cards .blog-card .content {
+          padding: 1rem;
+          color: #ffffff;
+      }
+
+      .regular-blog-cards .blog-card .content h2 {
+        font-family: 'Montserrat', sans-serif; /* Changed to Montserrat */
+          font-size: 1.5rem;
+          font-weight: 600;
+          margin-bottom: 0.5rem;
+          color: #3e7041;
+      }
+
+      .regular-blog-cards .blog-card .content .description {
+          margin-top: 1rem;
+          overflow: hidden;
+          position: relative;
+          line-height: 1.4;
+          max-height: 120px;
+          mask-image: linear-gradient(to bottom, black 20%, transparent 90%);
+          -webkit-mask-image: linear-gradient(to bottom, black 20%, transparent 90%);
+      }
+
+      .regular-blog-cards .blog-card .content .description::after {
+          content: '';
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          height: 4rem;
+          background: linear-gradient(transparent, #1c1c1c);
+      }
+      .pages{
+
+      transition: transform 0.3s ease-in-out;
+
+      }
+
+      .pages:hover{
+      transform: scale(1.1);
+      color: gold;
+      }
+      @media (max-width: 768px) {
+        .regular-blog-cards {
+          grid-template-columns: 1fr;
+        }
+      }
+      
+    </style>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      function openMenu(){
+        var elem = document.getElementById("fainavlinks");
+        elem.classList.toggle("hidden");
+        var menu = document.getElementById("fainavlinks-donate");
+        menu.classList.toggle("hidden");
+      }
+    </script>
+  </head>
+<body class="bg-black">
+
+    <!-- Header Section -->
+    <header
+      class="sm:flex sm:justify-between shrink rounded-2xl mx-2 mt-4 bg-opacity-75 backdrop-blur-lg fixed top-0 right-0 left-0 z-50"
+    >
+      <div class="flex items-center justify-between px-4 py-3">
+        <div class="">
+          <img src="images/grayscale_logo.png" alt="FPF" class="h-12 w-auto" style="max-width: 150px;" />
+        </div>
+        <button onclick="openMenu()" class="text-white sm:hidden">
+          <svg class="h-6 w-6 fill-current" viewBox="0 0 24 24">
+            <path
+              fill-rule="evenodd"
+              d="M4 5h16a1 1 0 0 1 0 2H4a1 1 0 1 1 0-2zm0 6h16a1 1 0 0 1 0 2H4a1 1 0 1 1 0-2zm0 6h16a1 1 0 0 1 0 2H4a1 1 0 1 1 0-2z"
+            />
+          </svg>
+        </button>
+      </div>
+      <div id="fainavlinks" class="hidden px-5 pt-2 sm:pb-4 sm:flex">
+        <a
+          href="index.html"
+          class="text-white text-base block sm:inline-block font-light rounded px-2 py-1 mt-3 transition ease-in-out delay-150 duration-300 hover:scale-110"
+          >Home</a
+        >
+        <a
+          href="about.html"
+          class="text-white text-base block sm:inline-block font-light rounded px-2 py-1 mt-3 transition ease-in-out delay-150 duration-300 hover:scale-110"
+          >About</a
+        >
+        <a
+          href="podcasts.html"
+          class="text-white text-base block sm:inline-block font-light rounded px-2 py-1 mt-3 transition ease-in-out delay-150 duration-300 hover:scale-110"
+          >Podcasts</a
+        >
+        <a
+          href="blogs.html"
+          class="text-white text-base block sm:inline-block font-light rounded px-2 py-1 mt-3 transition ease-in-out delay-150 duration-300 hover:scale-110"
+          >Blogs</a
+        >
+        <a
+          href="contact.html"
+          class="text-white text-base block sm:inline-block font-light rounded px-2 py-1 mt-3 transition ease-in-out delay-150 duration-300 hover:scale-110"
+          >Contact</a
+        >
+      </div>
+      <div id="fainavlinks-donate" class="hidden px-5 sm:pt-2 pb-4 sm:flex">
+      </div>
+    </header>
+    <div class="relative h-[100vh] lg:h-[100vh] flex flex-col items-center text-center">
+      <!-- Background Image -->
+      <div class="absolute inset-0">
+          <div class="bg-cover bg-center bg-no-repeat h-full w-full" style="background-image: url('images/blogs_background.avif');">
+              <div class="absolute inset-0 bg-black opacity-50"></div> <!-- This adds a dark overlay -->
+          </div>
+      </div>
+      
+      <!-- Main Content  -->
+      <div class="relative z-10 justify-center top-[45vh]">
+          <p class="text-7xl text-white text-center font-bold mb-2 title">Blogs</p>
+          <p class="text-3xl text-white">Read our thoughts about current Environmental Issues!</p>
+      </div>
+  </div>
+    <!-- Featured Blog Section -->
+    <section class="featured-blog">
+      <div class="blog-card">
+          <div class="image-container">
+              <img src="images/wildfire_image.webp" alt="Blog Image" class="image" />
+          </div>
+          <div class="content">
+              <span class="tag">January 11th, 2025</span>
+              <div class="text-black bg-[#3e7041] xl:text-xl md:text-md text-sm font-bold px-2 py-1 inline-block rounded-md absolute xl:right-[4vh] right-[2vh] xl:top-[4vh] top-[2vh] rotate-6">
+                FEATURED
+              </div>
+              <h2>Impact of the Greater Los Angeles wildfires</h2>
+              <div class="description">
+                  <p>
+                    As plumes of smoke envelop the skies above Greater Los Angeles, we’re reminded of the devastating power of wildfires and the urgent need to confront the factors fueling these blazes. The LA wildfires, ignited amidst a particularly dry season, have left thousands scrambling for safety, choking the air with ash and impacting communities across the region.
+                    Wildfires in California are nothing new, but their intensity and frequency have surged in recent years. This year’s inferno stems from a combination of human activity, climate change, and natural conditions. Persistent drought, coupled with high temperatures, has left vegetation parched and vulnerable. When powerful Santa Ana winds sweep across the region, a single spark—from faulty power lines, campfires, or even carelessness—can erupt into an uncontrollable blaze.
+                  </p>
+              </div>
+              <a href="blogs/blogs_wildfires.html" class="read-more">
+                  Read More
+                  <img src="images/arrow.png" alt="Arrow Icon" class="a-img"/>
+              </a>
+          </div>
+      </div>
+
+      <!-- Regular blog section-->
+      <section class="regular-blog-cards">
+        <div class="blog-card">
+          <img src="images/extreme_heat.jpg" alt="Blog Image" class="image" />
+          <div class="content">
+              <span class="datetag">December 14th, 2024</span>
+              <h2>Extreme Heat Waves in Europe and North America (2023-2024)</h2>
+              <div class="description">
+                  <p>
+                    Over the past two years, record-breaking heat waves have gripped Europe and North America, pushing temperatures to unprecedented levels. Cities from Athens to Phoenix have faced relentless heat, leading to water shortages, destructive wildfires, and severe public health crises. These extreme events are a sobering reminder of how climate change is amplifying natural weather patterns and testing the resilience of communities worldwide.
+                  </p>
+              </div>
+              <a href="blogs/blogs_heat.html" class="read-more">
+                  Read More
+                  <img src="images/arrow.png" alt="Arrow Icon" class="a-img"/>
+              </a>
+          </div>
+      </div>
+    
+        <div class="blog-card">
+            <img src="images/plastic.jpg" alt="Blog Image" class="image" />
+            <div class="content">
+                <span class="datetag">November 3rd, 2024</span>
+                <h2>Global Plastic Waste Crisis</h2>
+                <div class="description">
+                    <p>
+                      In 2023, the world faced a stark reminder of the growing plastic waste crisis. Despite international pledges to curb single-use plastics, plastic pollution continued to climb, with marine environments bearing the brunt of this escalating disaster. This issue underscores the urgent need for innovative solutions and stronger policies to combat the mounting tide of waste that threatens ecosystems and human health alike.
+                    </p>
+                </div>
+                <a href="blogs/blogs_plastic.html" class="read-more">
+                    Read More
+                    <img src="images/arrow.png" alt="Arrow Icon" class="a-img"/>
+                </a>
+            </div>
+        </div>
+    
+       
+    
+        <div class="blog-card">
+            <img src="images/COP28.jpg" alt="Blog Image" class="image" />
+            <div class="content">
+                <span class="datetag">October 16th, 2024</span>
+                <h2>COP28 and Global Climate Commitments</h2>
+                <div class="description">
+                    <p>
+                      In 2023, global leaders gathered in Dubai for COP28, the annual climate summit under the United Nations Framework Convention on Climate Change (UNFCCC). The event was a critical moment in the global push to limit warming to 1.5°C above pre-industrial levels—a target scientists emphasize is essential to avoid catastrophic climate impacts. While the summit showcased some promising agreements and renewed commitments, it also raised pressing questions about whether these efforts are enough and how effectively they can be implemented.
+                    </p>
+                </div>
+                <a href="blogs/blogs.cop28.html" class="read-more">
+                    Read More
+                    <img src="images/arrow.png" alt="Arrow Icon" class="a-img"/>
+                </a>
+            </div>
+        </div>
+        <div class="blog-card">
+          <img src="images/E-waste.jpg" alt="Blog Image" class="image" />
+          <div class="content">
+              <span class="datetag">September 7th, 2024</span>
+              <h2>The E-Waste Problem</h2>
+              <div class="description">
+                  <p>
+                    In the past two years, electronic waste (e-waste) has surged at an alarming rate, fueled by rising demand for smartphones, laptops, and other devices. With over 50 million metric tons of e-waste generated globally in 2023, the issue has become a critical environmental and public health challenge. As this problem grows, the need for effective solutions becomes more urgent than ever.
+                  </p>
+              </div>
+              <a href="blogs/blogs_e-waste.html" class="read-more">
+                  Read More
+                  <img src="images/arrow.png" alt="Arrow Icon" class="a-img"/>
+              </a>
+          </div>
+      </div>
+        <div class="blog-card">
+            <img src="images/water_scarcity.jpg" alt="Blog Image" class="image" />
+            <div class="content">
+                <span class="datetag">August 3rd, 2024</span>
+                <h2>Ongoing Water Scarcity in the American West</h2>
+                <div class="description">
+                    <p>
+                      Water scarcity in the American West has reached critical levels, with reservoirs like Lake Mead and Lake Powell at historically low capacities. This ongoing crisis highlights the pressing need for sustainable water management to address the region’s growing demand and dwindling supplies. As communities, farmers, and policymakers grapple with these challenges, the stakes for the environment and livelihoods couldn’t be higher.
+                    </p>
+                </div>
+                <div class="w-fit">
+                  <a href="blogs/blogs_water-scarcity.html" class="read-more ">
+                    Read More
+                    <img src="images/arrow.png" alt="Arrow Icon" class="a-img"/>
+                  </a>
+                </div>
+            </div>
+        </div>
+    
+        <div class="blog-card">
+            <img src="images/greenwashing.jpg" alt="Blog Image" class="image" />
+            <div class="content">
+                <span class="datetag">July 7th, 2024</span>
+                <h2>Greenwashing and Corporate Accountability</h2>
+                <div class="description">
+                    <p>
+                      In recent years, the spotlight on environmental responsibility has intensified, but so has the practice of greenwashing—when companies make misleading claims about the environmental benefits of their products or practices. In 2023 and 2024, numerous corporations came under fire for overstating their sustainability efforts, eroding consumer trust and slowing genuine progress toward addressing climate change. Combating greenwashing requires coordinated efforts from governments, NGOs, and consumers to hold corporations accountable for their actions.
+                    </p>
+                </div>
+                <a href="blogs/blogs_greenwashing.html" class="read-more">
+                    Read More
+                    <img src="images/arrow.png" alt="Arrow Icon" class="a-img"/>
+                </a>
+            </div>
+        </div>
+    </section>  
+      <footer class="bg-veryDarkBlue" style="background-color: #2925257a;">
+        <div class="container flex flex-col-reverse justify-between px-6 py-10 mx-auto space-y-8 md:flex-row md:space-y-0" style="padding: 100px;">
+          <div class="flex flex-col-reverse items-center justify-between space-y-12 md:flex-col md:space-y-0 md:items-start">
+            <div class="mx-auto my-6 text-center text-white md:hidden">
+              Add Copyright Stamp
+            </div>
+            <div class="containero" style="justify-content: center;">
+              <img src="images/favicon.png" class="h-12" alt="" style="height: 125px;"/>
+            </div>
+            <div class="flex justify-center space-x-4" style="padding-top: 40px;">
+              <a href="https://www.youtube.com/@FriscoPollenFreeInitiative" target="_blank">
+                <img src="images/icon-youtube.svg" alt="" class="h-8" />
+              </a>
+            </div>
+          </div>
+  
+          <div class="links-container">
+            <div class="flex justify-end space-x-32">
+              <div class="flex flex-col space-y-3 text-white" style="font-size: large;">
+                <a class="pages" href="index.html" class="hover:text-brightRed">Home</a>
+                <a class="pages" href="about.html" class="hover:text-brightRed">About</a>
+                <a class="pages" href="podcasts.html" class="hover:text-brightRed">Podcasts</a>
+                <a class="pages" href="blogs.html" class="hover:text-brightRed">Blogs</a>
+                <a class="pages" href="contact.html" class="hover:text-brightRed">Contact</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
+    
+    
+    <script src="js/scripts.js"></script>
+</body>
+</html>
