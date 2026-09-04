@@ -1,8 +1,13 @@
 # Vocab Trainer
 
-A Quizlet-style "Learn" mode for memorizing terms and definitions. No build
-step, no dependencies: open `index.html` in a browser or host it as a static
-site (GitHub Pages works).
+A Quizlet-style "Learn" mode for memorizing terms and definitions, built for
+vocabulary-first studying: clear a week's terms before opening that week's
+readings, lectures, or slides. No build step, no dependencies: open
+`index.html` in a browser or host it as a static site.
+
+The home screen lists each course week with its status. A week is **cleared**
+once you finish every term in a writing or both-rounds session with at least
+90% first-try accuracy. Progress is stored in your browser.
 
 ## How a session works
 
@@ -33,9 +38,11 @@ you think was right, use **Override: I was right**.
    ```js
    window.VOCAB_SETS = window.VOCAB_SETS || [];
    window.VOCAB_SETS.push({
-     id: "my-set",
-     title: "My Set",
-     source: "where it came from (optional)",
+     id: "ethics-week2",
+     course: "Ethics",
+     week: 2,
+     title: "What the week is about",
+     materials: ["reading.pdf", "lecture-2-transcript.txt", "slides-2.pdf"],
      cards: [
        { term: "Term", definition: "What is shown as the prompt.", alt: ["other accepted spellings"] },
        { term: "Some Philosopher", definition: "Who they were.", kind: "person" },
@@ -45,7 +52,7 @@ you think was right, use **Override: I was right**.
 
 2. Add `<script src="sets/<name>.js"></script>` to `index.html` above `app.js`.
 
-The set then appears in the dropdown on the home screen. Cards with
+The set then appears in the week list on the home screen. Cards with
 `kind: "person"` (philosophers, authors, works) are hidden unless the
 "Include philosophers & works" box is ticked. Avoid repeating the term inside
 its own definition, or the multiple-choice round gives it away.

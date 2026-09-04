@@ -15,6 +15,7 @@
   var DEFAULT_BATCH_SIZE = 15;
   var CHOICES = 4;
   var AUTO_ADVANCE_MS = 900;
+  var CLEAR_THRESHOLD = 90; // first-try accuracy needed to mark a week as cleared
   var MC_ADVANCE_MS = 500;
 
   var $app = document.getElementById("app");
@@ -42,6 +43,40 @@
   function savePrefs() {
     try { localStorage.setItem("vocab-trainer-prefs", JSON.stringify(prefs)); } catch (e) { /* ignore */ }
   }
+
+  var progress = loadProgress(); // setId -> { best, last, lastAt, sessions, cleared }
+  function loadProgress() {
+    try { return JSON.parse(localStorage.getItem("vocab-trainer-progress") || "{}") || {}; } catch (e) { return {}; }
+  }
+  function saveProgress() {
+    try { localStorage.setItem("vocab-trainer-progress", JSON.stringify(progress)); } catch (e) { /* ignore */ }
+  }
+  function recordResult(set, accuracy, countsForClearing) {
+    var p = progress[set.id] || { best: 0, last: 0, lastAt: null, sessions: 0, cleared: false };
+    p.sessions++;
+    p.last = accuracy;
+    p.lastAt = new Date().toISOString();
+    if (countsForClearing) {
+      p.best = Math.max(p.best, accuracy);
+      if (accuracy >= CLEAR_THRESHOLD) p.cleared = true;
+    }
+    progress[set.id] = p;
+    saveProgress();
+    return p;
+  }
+  function statusOf(set) {
+    var p = progress[set.id];
+    if (!p) return { key: "new", label: "Not started" };
+    if (p.cleared) return { key: "cleared", label: "Cleared \u00b7 best " + p.best + "%" };
+    return { key: "progress", label: "In progress \u00b7 best " + p.best + "%" };
+  }
+  function sortedSets() {
+    return sets.slice().sort(function (a, b) {
+      var c = String(a.course || "").localeCompare(String(b.course || ""));
+      return c || ((a.week || 0) - (b.week || 0));
+    });
+  }
+  function setName(set) { return (set.week ? "Week " + set.week + " \u00b7 " : "") + set.title; }
 
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, function (c) {
@@ -120,6 +155,8 @@
       set: set,
       pool: pool,                      // distractors are drawn from here
       mode: prefs.mode,
+      fullSet: cardIdxs.length === pool.length,
+      recorded: false,
       batches: chunk(order, prefs.batchSize),
       batchIdx: 0,
       results: [],                     // one summary per finished batch
@@ -300,8 +337,12 @@
       return;
     }
     var set = currentSet();
-    var options = sets.map(function (s) {
-      return '<option value="' + escapeHtml(s.id) + '"' + (s.id === set.id ? " selected" : "") + ">" + escapeHtml(s.title) + "</option>";
+    var weekRows = sortedSets().map(function (s) {
+      var st = statusOf(s);
+      var n = s.cards.filter(function (c) { return !isPerson(c); }).length;
+      return '<button class="week' + (s.id === set.id ? " selected" : "") + '" data-set="' + escapeHtml(s.id) + '">' +
+        '<span class="week-name">' + escapeHtml(setName(s)) + '<small>' + escapeHtml(s.course || "") + " &middot; " + n + " terms</small></span>" +
+        '<span class="badge ' + st.key + '">' + st.label + "</span></button>";
     }).join("");
     var pool = poolFor(set);
     var people = set.cards.filter(isPerson).length;
@@ -309,9 +350,11 @@
 
     $app.innerHTML =
       '<div class="card">' +
-        "<h1>Learn</h1>" +
-        '<p class="muted">You get the definition and answer with the term. Miss one and it comes back at the end of the round.</p>' +
-        '<label class="field"><span>Term set</span><select id="set-select">' + options + "</select></label>" +
+        "<h1>Clear this week's vocabulary first</h1>" +
+        '<p class="muted">Do this before the readings, lectures, or slides. A week is cleared once you finish every term in a writing or both-rounds session with at least ' + CLEAR_THRESHOLD + "% first-try accuracy.</p>" +
+        '<div class="weeks">' + weekRows + "</div>" +
+        '<h2 style="margin-top:22px">' + escapeHtml(setName(set)) + "</h2>" +
+        (set.materials && set.materials.length ? '<p class="small muted">Covers: ' + set.materials.map(escapeHtml).join(", ") + "</p>" : "") +
         '<label class="field"><span>Study mode</span><select id="mode">' +
           '<option value="both"' + (prefs.mode === "both" ? " selected" : "") + ">Both rounds: multiple choice, then writing</option>" +
           '<option value="write"' + (prefs.mode === "write" ? " selected" : "") + ">Writing only</option>" +
@@ -324,8 +367,7 @@
             (people ? '<label class="check"><input id="include-people" type="checkbox"' + (prefs.includePeople ? " checked" : "") + "> Include philosophers &amp; works (" + people + ")</label>" : "") +
           "</div>" +
         "</div>" +
-        '<p class="small muted">' + pool.length + " terms &rarr; " + batches + " batch" + (batches === 1 ? "" : "es") +
-          (set.source ? " &middot; source: " + escapeHtml(set.source) : "") + "</p>" +
+        '<p class="small muted">' + pool.length + " terms &rarr; " + batches + " batch" + (batches === 1 ? "" : "es") + "</p>" +
         '<div class="row"><button class="btn primary" id="start">Start</button>' +
         '<button class="btn link" id="toggle-terms">Show all terms</button></div>' +
         '<div id="term-list" class="term-list" style="margin-top:16px" hidden>' +
@@ -334,7 +376,9 @@
         '<p class="small muted" style="margin-top:18px">Shortcuts: <span class="kbd">1</span>-<span class="kbd">4</span> pick a choice, <span class="kbd">Enter</span> submits or continues.</p>' +
       "</div>";
 
-    document.getElementById("set-select").onchange = function (e) { prefs.setId = e.target.value; savePrefs(); render(); };
+    Array.prototype.forEach.call($app.querySelectorAll("[data-set]"), function (btn) {
+      btn.onclick = function () { prefs.setId = btn.getAttribute("data-set"); savePrefs(); render(); };
+    });
     document.getElementById("mode").onchange = function (e) { prefs.mode = e.target.value; savePrefs(); };
     document.getElementById("batch-size").onchange = function (e) {
       var v = parseInt(e.target.value, 10);
@@ -485,6 +529,14 @@
     var acc = pct(clean, total);
     var missed = allMissed();
     $status.textContent = "Session complete";
+    var counts = session.fullSet && session.mode !== "mc";
+    if (!session.recorded) { recordResult(session.set, acc, counts); session.recorded = true; }
+    var st = statusOf(session.set);
+    var verdict;
+    if (st.key === "cleared" && counts && acc >= CLEAR_THRESHOLD) verdict = '<div class="feedback ok"><strong>Week cleared.</strong> You can open the readings, lectures, and slides for ' + escapeHtml(setName(session.set)) + ".</div>";
+    else if (st.key === "cleared") verdict = '<div class="feedback ok"><strong>Already cleared.</strong> This week counted as cleared earlier (best ' + progress[session.set.id].best + "%).</div>";
+    else if (!counts) verdict = '<div class="feedback bad"><strong>Not counted toward clearing.</strong> ' + (session.mode === "mc" ? "Multiple-choice-only sessions" : "Practice sessions on missed terms") + " don't clear a week; run every term in writing or both-rounds mode.</div>";
+    else verdict = '<div class="feedback bad"><strong>Not cleared yet.</strong> You need ' + CLEAR_THRESHOLD + "% first-try accuracy over the whole week; this run was " + acc + "%. Practice the missed terms, then run the full set again.</div>";
 
     $app.innerHTML =
       '<div class="card">' +
@@ -492,6 +544,7 @@
         "<h1>Session complete</h1>" +
         '<div class="big-stat ' + grade(acc) + '">' + acc + "%</div>" +
         '<p class="muted">' + clean + " of " + total + " terms right on the first try " + accuracyNote() + ".</p>" +
+        verdict +
         '<div class="stats">' +
           '<div class="stat"><b>' + session.results.length + "</b><span>batches</span></div>" +
           '<div class="stat"><b>' + missed.length + "</b><span>terms missed</span></div>" +

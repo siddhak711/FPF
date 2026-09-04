@@ -12,6 +12,7 @@
   --bad: #d64545;
   --bad-soft: #fde8e8;
   --warn: #b7791f;
+  --warn-soft: #fff3d6;
   --radius: 14px;
   --shadow: 0 1px 2px rgba(20, 24, 40, .06), 0 8px 24px rgba(20, 24, 40, .06);
 }
@@ -28,6 +29,7 @@
     --ok-soft: #123423;
     --bad: #ff6b6b;
     --bad-soft: #3d1c1c;
+    --warn-soft: #3a2e12;
     --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
   }
 }
@@ -165,3 +167,19 @@ td.term { font-weight: 600; white-space: nowrap; }
 .term-list div:last-child { border-bottom: none; }
 .term-list b { display: block; }
 .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; padding: 1px 6px; border: 1px solid var(--line); border-radius: 5px; background: var(--bg); }
+
+.weeks { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.week {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  width: 100%; text-align: left; font: inherit; cursor: pointer;
+  padding: 12px 14px; border: 1.5px solid var(--line); border-radius: 12px;
+  background: var(--card); color: var(--text);
+}
+.week:hover { border-color: var(--accent); }
+.week.selected { border-color: var(--accent); background: var(--accent-soft); }
+.week-name { font-weight: 600; }
+.week-name small { display: block; font-weight: 400; font-size: 13px; color: var(--muted); }
+.badge { flex: none; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 99px; white-space: nowrap; }
+.badge.new { background: var(--line); color: var(--muted); }
+.badge.progress { background: var(--warn-soft); color: var(--warn); }
+.badge.cleared { background: var(--ok-soft); color: var(--ok); }
