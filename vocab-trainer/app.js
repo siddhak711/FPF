@@ -343,6 +343,19 @@
 
   // ---------- rendering ----------
 
+  var lastScreen = null;
+  function screenKey() {
+    if (!session) return "home";
+    var b = session.batch, c = session.current;
+    return [session.view, session.batchIdx, b && b.round, c && c.ci].join(":");
+  }
+  function cardClass() {
+    var k = screenKey();
+    var cls = k === lastScreen ? "card" : "card enter";
+    lastScreen = k;
+    return cls;
+  }
+
   function render() {
     if (!session) return renderHome();
     if (session.view === "question") return renderQuestion();
@@ -354,7 +367,7 @@
   function courseTabsHtml(course) {
     var all = courses();
     if (all.length < 2) return "";
-    return '<div class="tabs">' + all.map(function (c) {
+    return '<div class="segmented" style="margin-bottom:6px">' + all.map(function (c) {
       return '<button class="tab' + (c === course ? " active" : "") + '" data-course="' + escapeHtml(c) + '">' + escapeHtml(c) + "</button>";
     }).join("") + "</div>";
   }
@@ -365,7 +378,7 @@
       var n = effectiveCards(s).filter(function (c) { return !isPerson(c); }).length;
       return '<button class="week' + (set && s.id === set.id ? " selected" : "") + '" data-set="' + escapeHtml(s.id) + '">' +
         '<span class="week-name">' + escapeHtml(setName(s)) + "<small>" + n + " terms</small></span>" +
-        '<span class="badge ' + st.key + '">' + st.label + "</span></button>";
+        '<span class="week-right"><span class="badge ' + st.key + '"><i></i>' + st.label + '</span><span class="chev"></span></span></button>';
     }).join("") + "</div>";
   }
 
@@ -402,7 +415,7 @@
 
     var hasEdits = e.removed.length || e.added.length;
     var exportBlock = hasEdits
-      ? '<div class="row" style="margin-top:12px"><button class="btn link small" id="export-toggle">' + (ui.exportOpen ? "Hide export" : "Export edits") + "</button></div>" +
+      ? '<div class="export-row"><button class="btn link small" id="export-toggle">' + (ui.exportOpen ? "Hide export" : "Export edits") + "</button></div>" +
         (ui.exportOpen ? '<textarea class="export" readonly rows="6">' + escapeHtml(JSON.stringify({ setId: set.id, removed: e.removed, added: e.added }, null, 2)) + "</textarea>" : "")
       : "";
 
@@ -423,32 +436,34 @@
     var batches = Math.ceil(pool.length / prefs.batchSize);
 
     $app.innerHTML =
-      '<div class="card">' +
-        "<h1>Clear this week's vocabulary first</h1>" +
-        '<p class="muted">Do this before the readings, lectures, or slides. A week is cleared once you finish every term in a writing or both-rounds session with at least ' + CLEAR_THRESHOLD + "% first-try accuracy.</p>" +
+      '<div class="' + cardClass() + '">' +
+        '<p class="eyebrow">Vocabulary first</p>' +
+        "<h1>Clear this week's vocabulary before the readings</h1>" +
+        '<p class="muted">A week is cleared once you finish every term in a writing or both-rounds session with at least ' + CLEAR_THRESHOLD + "% first-try accuracy.</p>" +
         courseTabsHtml(course) +
         weekListHtml(course, set) +
         (set ? (
-          '<h2 style="margin-top:22px">' + escapeHtml(course) + " &middot; " + escapeHtml(setName(set)) + "</h2>" +
-          (set.materials && set.materials.length ? '<p class="small muted">Covers: ' + set.materials.map(escapeHtml).join(", ") + "</p>" : "") +
-          '<label class="field"><span>Study mode</span><select id="mode">' +
-            '<option value="both"' + (prefs.mode === "both" ? " selected" : "") + ">Both rounds: multiple choice, then writing</option>" +
-            '<option value="write"' + (prefs.mode === "write" ? " selected" : "") + ">Writing only</option>" +
-            '<option value="mc"' + (prefs.mode === "mc" ? " selected" : "") + ">Multiple choice only</option>" +
-          "</select></label>" +
-          '<div class="row">' +
-            '<label class="field" style="flex:1"><span>Batch size</span><input id="batch-size" type="number" min="1" max="100" value="' + prefs.batchSize + '"></label>' +
-            '<div style="margin-top:24px">' +
+          '<h2 style="margin-top:28px">' + escapeHtml(setName(set)) + "</h2>" +
+          (set.materials && set.materials.length ? '<p class="small muted">Covers ' + set.materials.map(escapeHtml).join(", ") + "</p>" : "") +
+          '<label class="field"><span>Study mode</span></label>' +
+          '<div class="segmented" id="mode">' +
+            '<button data-mode="both" class="' + (prefs.mode === "both" ? "active" : "") + '">Multiple choice, then writing</button>' +
+            '<button data-mode="write" class="' + (prefs.mode === "write" ? "active" : "") + '">Writing only</button>' +
+            '<button data-mode="mc" class="' + (prefs.mode === "mc" ? "active" : "") + '">Multiple choice only</button>' +
+          "</div>" +
+          '<div class="row" style="align-items:flex-end; margin-top:6px">' +
+            '<label class="field" style="flex:0 0 140px"><span>Batch size</span><input id="batch-size" type="number" min="1" max="100" value="' + prefs.batchSize + '"></label>' +
+            '<div class="toggles" style="padding-bottom:10px; margin-left:auto">' +
               '<label class="check"><input id="shuffle" type="checkbox"' + (prefs.shuffle ? " checked" : "") + "> Shuffle terms</label>" +
               (people ? '<label class="check"><input id="include-people" type="checkbox"' + (prefs.includePeople ? " checked" : "") + "> Include philosophers &amp; works (" + people + ")</label>" : "") +
             "</div>" +
           "</div>" +
-          '<p class="small muted">' + pool.length + " terms &rarr; " + batches + " batch" + (batches === 1 ? "" : "es") + "</p>" +
-          '<div class="row"><button class="btn primary" id="start"' + (pool.length ? "" : " disabled") + ">Start</button>" +
+          '<p class="small muted" style="margin-top:14px">' + pool.length + " terms &middot; " + batches + " batch" + (batches === 1 ? "" : "es") + " of " + prefs.batchSize + "</p>" +
+          '<div class="row"><button class="btn primary" id="start"' + (pool.length ? "" : " disabled") + ">Start studying</button>" +
           '<button class="btn link" id="toggle-terms">' + (ui.termsOpen ? "Hide terms" : "Show all terms") + "</button></div>" +
           (ui.termsOpen ? termListHtml(set, cards, pool) : "")
         ) : '<p class="muted">No weeks in this course yet.</p>') +
-        '<p class="small muted" style="margin-top:18px">Shortcuts: <span class="kbd">1</span>-<span class="kbd">4</span> pick a choice, <span class="kbd">Enter</span> submits or continues.</p>' +
+        '<p class="small muted" style="margin-top:24px">Keys <span class="kbd">1</span>–<span class="kbd">4</span> pick a choice. <span class="kbd">Enter</span> submits or continues.</p>' +
       "</div>";
 
     // course + week selection
@@ -461,7 +476,9 @@
     if (!set) return;
 
     // settings
-    document.getElementById("mode").onchange = function (e) { prefs.mode = e.target.value; savePrefs(); };
+    Array.prototype.forEach.call($app.querySelectorAll("[data-mode]"), function (btn) {
+      btn.onclick = function () { prefs.mode = btn.getAttribute("data-mode"); savePrefs(); render(); };
+    });
     document.getElementById("batch-size").onchange = function (e) {
       var v = parseInt(e.target.value, 10);
       prefs.batchSize = isNaN(v) ? DEFAULT_BATCH_SIZE : Math.max(1, Math.min(100, v));
@@ -568,7 +585,7 @@
       }
     }
 
-    $app.innerHTML = progressHtml() + '<div class="card">' + body + "</div>";
+    $app.innerHTML = progressHtml() + '<div class="' + cardClass() + '">' + body + "</div>";
 
     Array.prototype.forEach.call($app.querySelectorAll("[data-choice]"), function (btn) {
       btn.onclick = function () { answerChoice(parseInt(btn.getAttribute("data-choice"), 10)); };
@@ -588,7 +605,7 @@
     var b = session.batch;
     $status.textContent = "Batch " + (session.batchIdx + 1) + "/" + session.batches.length + " · Round 1 done";
     $app.innerHTML = progressHtml() +
-      '<div class="card">' +
+      '<div class="' + cardClass() + '">' +
         '<span class="stage-tag">Round 1 complete</span>' +
         "<h1>Now write them</h1>" +
         '<p class="muted">You picked all ' + b.size + " terms" + (b.mcMisses ? " with " + b.mcMisses + " miss" + (b.mcMisses === 1 ? "" : "es") : " without a miss") +
@@ -613,8 +630,8 @@
     var isLast = session.batchIdx + 1 >= session.batches.length;
     $status.textContent = "Batch " + (session.batchIdx + 1) + "/" + session.batches.length + " done";
     $app.innerHTML =
-      '<div class="card">' +
-        '<p class="muted small">Batch ' + (session.batchIdx + 1) + " of " + session.batches.length + "</p>" +
+      '<div class="' + cardClass() + '">' +
+        '<p class="eyebrow">Batch ' + (session.batchIdx + 1) + " of " + session.batches.length + "</p>" +
         "<h1>Accuracy</h1>" +
         '<div class="big-stat ' + grade(r.accuracy) + '">' + r.accuracy + "%</div>" +
         '<p class="muted">' + r.clean + " of " + r.size + " terms right on the first try " + accuracyNote() + ".</p>" +
@@ -650,8 +667,8 @@
     else verdict = '<div class="feedback bad"><strong>Not cleared yet.</strong> You need ' + CLEAR_THRESHOLD + "% first-try accuracy over the whole week; this run was " + acc + "%. Practice the missed terms, then run the full set again.</div>";
 
     $app.innerHTML =
-      '<div class="card">' +
-        '<p class="muted small">' + escapeHtml((session.set.course || "") + " · " + setName(session.set)) + "</p>" +
+      '<div class="' + cardClass() + '">' +
+        '<p class="eyebrow">' + escapeHtml((session.set.course || "") + " · " + setName(session.set)) + "</p>" +
         "<h1>Session complete</h1>" +
         '<div class="big-stat ' + grade(acc) + '">' + acc + "%</div>" +
         '<p class="muted">' + clean + " of " + total + " terms right on the first try " + accuracyNote() + ".</p>" +
