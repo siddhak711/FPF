@@ -7,7 +7,9 @@ site (GitHub Pages works).
 ## How a session works
 
 1. Terms are shuffled and split into batches of 15 (configurable on the home screen).
-2. Each batch has two rounds. You always see the **definition**:
+2. Each batch has up to two rounds, chosen by the **Study mode** on the home
+   screen (both rounds, writing only, or multiple choice only). You always see
+   the **definition**:
    - **Round 1**: pick the term from four choices for every term in the batch (keys `1`-`4` work).
    - **Round 2**: type the term for every term in the batch (`Enter` submits).
 3. If you miss a term in either round, the correct answer is shown and the

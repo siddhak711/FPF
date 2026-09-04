@@ -1,8 +1,9 @@
 /* Vocab Trainer
  *
- * Terms are studied in batches (default 15). Each batch has two rounds:
+ * Terms are studied in batches (default 15). Each batch has up to two rounds:
  *   Round 1: for every term, see the definition and pick the term (multiple choice).
  *   Round 2: for every term, see the definition and type the term.
+ * The study mode picks which rounds run: "both" (default), "write" only, or "mc" only.
  * A miss in either round shows the correct answer and pushes the term to the
  * end of that round's queue, so the round only ends when every term has been
  * answered correctly. Accuracy for a batch = terms answered right on the first
@@ -27,12 +28,13 @@
   // ---------- helpers ----------
 
   function loadPrefs() {
-    var p = { setId: sets.length ? sets[0].id : null, shuffle: true, batchSize: DEFAULT_BATCH_SIZE, includePeople: false };
+    var p = { setId: sets.length ? sets[0].id : null, shuffle: true, batchSize: DEFAULT_BATCH_SIZE, includePeople: false, mode: "both" };
     try {
       var saved = JSON.parse(localStorage.getItem("vocab-trainer-prefs") || "{}");
       if (saved.setId && sets.some(function (s) { return s.id === saved.setId; })) p.setId = saved.setId;
       if (typeof saved.shuffle === "boolean") p.shuffle = saved.shuffle;
       if (typeof saved.includePeople === "boolean") p.includePeople = saved.includePeople;
+      if (saved.mode === "both" || saved.mode === "write" || saved.mode === "mc") p.mode = saved.mode;
       if (saved.batchSize >= 1 && saved.batchSize <= 100) p.batchSize = saved.batchSize;
     } catch (e) { /* ignore */ }
     return p;
@@ -91,6 +93,17 @@
 
   function isPerson(card) { return card.kind === "person"; }
 
+  function rounds() { return (session ? session.mode : prefs.mode) === "both" ? 2 : 1; }
+  function roundTitle(round) { return round === "mc" ? "Multiple choice" : "Writing"; }
+  function roundLabel(round) {
+    if (rounds() === 1) return roundTitle(round);
+    return "Round " + (round === "mc" ? 1 : 2) + " of 2 &middot; " + roundTitle(round);
+  }
+  function accuracyNote() {
+    var mode = session ? session.mode : prefs.mode;
+    return mode === "both" ? "in both rounds" : "in the " + roundTitle(mode === "mc" ? "mc" : "type").toLowerCase() + " round";
+  }
+
   // Indices of the cards this session draws from (concepts, plus people if enabled).
   function poolFor(set) {
     var out = [];
@@ -106,6 +119,7 @@
     session = {
       set: set,
       pool: pool,                      // distractors are drawn from here
+      mode: prefs.mode,
       batches: chunk(order, prefs.batchSize),
       batchIdx: 0,
       results: [],                     // one summary per finished batch
@@ -121,7 +135,7 @@
     session.batch = {
       ids: ids,
       size: ids.length,
-      round: "mc",         // "mc" then "type"
+      round: session.mode === "write" ? "type" : "mc",
       queue: ids.slice(),
       mcDone: 0,
       typeDone: 0,
@@ -139,7 +153,7 @@
     clearTimeout(advanceTimer);
     var b = session.batch;
     if (!b.queue.length) {
-      if (b.round === "mc") { session.view = "round-break"; render(); return; }
+      if (b.round === "mc" && session.mode === "both") { session.view = "round-break"; render(); return; }
       finishBatch(); return;
     }
     var ci = b.queue.shift();
@@ -296,8 +310,13 @@
     $app.innerHTML =
       '<div class="card">' +
         "<h1>Learn</h1>" +
-        '<p class="muted">Each batch has two rounds. Round 1: pick the term for each definition. Round 2: type the term for each definition. Miss one and it comes back at the end of that round.</p>' +
+        '<p class="muted">You get the definition and answer with the term. Miss one and it comes back at the end of the round.</p>' +
         '<label class="field"><span>Term set</span><select id="set-select">' + options + "</select></label>" +
+        '<label class="field"><span>Study mode</span><select id="mode">' +
+          '<option value="both"' + (prefs.mode === "both" ? " selected" : "") + ">Both rounds: multiple choice, then writing</option>" +
+          '<option value="write"' + (prefs.mode === "write" ? " selected" : "") + ">Writing only</option>" +
+          '<option value="mc"' + (prefs.mode === "mc" ? " selected" : "") + ">Multiple choice only</option>" +
+        "</select></label>" +
         '<div class="row">' +
           '<label class="field" style="flex:1"><span>Batch size</span><input id="batch-size" type="number" min="1" max="100" value="' + prefs.batchSize + '"></label>' +
           '<div style="margin-top:24px">' +
@@ -316,6 +335,7 @@
       "</div>";
 
     document.getElementById("set-select").onchange = function (e) { prefs.setId = e.target.value; savePrefs(); render(); };
+    document.getElementById("mode").onchange = function (e) { prefs.mode = e.target.value; savePrefs(); };
     document.getElementById("batch-size").onchange = function (e) {
       var v = parseInt(e.target.value, 10);
       prefs.batchSize = isNaN(v) ? DEFAULT_BATCH_SIZE : Math.max(1, Math.min(100, v));
@@ -338,10 +358,9 @@
   function progressHtml() {
     var b = session.batch;
     var done = b.round === "mc" ? b.mcDone : b.typeDone;
-    var pctDone = pct(b.mcDone + b.typeDone, b.size * 2);
-    var roundLabel = b.round === "mc" ? "Round 1 of 2 &middot; Multiple choice" : "Round 2 of 2 &middot; Writing";
+    var pctDone = pct(b.mcDone + b.typeDone, b.size * rounds());
     return '<div class="progress"><div class="meta">' +
-      "<span>Batch " + (session.batchIdx + 1) + " of " + session.batches.length + " &middot; " + roundLabel + "</span>" +
+      "<span>Batch " + (session.batchIdx + 1) + " of " + session.batches.length + " &middot; " + roundLabel(b.round) + "</span>" +
       "<span>" + done + " / " + b.size + " this round</span>" +
       '</div><div class="bar"><i style="width:' + pctDone + '%"></i></div></div>';
   }
@@ -350,11 +369,11 @@
     var cur = session.current;
     var card = session.set.cards[cur.ci];
     var b = session.batch;
-    $status.textContent = "Batch " + (session.batchIdx + 1) + "/" + session.batches.length + " · " + (b.round === "mc" ? "Round 1" : "Round 2");
+    $status.textContent = "Batch " + (session.batchIdx + 1) + "/" + session.batches.length + " · " + (rounds() === 2 ? (b.round === "mc" ? "Round 1" : "Round 2") : roundTitle(b.round));
 
     var body;
     if (b.round === "mc") {
-      body = '<span class="stage-tag">Round 1 · Pick the term</span>' +
+      body = '<span class="stage-tag">' + (rounds() === 2 ? "Round 1 · " : "") + 'Pick the term</span>' +
         '<p class="definition">' + escapeHtml(card.definition) + "</p>" +
         '<div class="choices">' +
         cur.choices.map(function (ci, n) {
@@ -373,7 +392,7 @@
       }
     } else {
       var inputCls = cur.result === "ok" ? " class=\"correct\"" : cur.result === "bad" ? " class=\"wrong\"" : "";
-      body = '<span class="stage-tag">Round 2 · Type the term</span>' +
+      body = '<span class="stage-tag">' + (rounds() === 2 ? "Round 2 · " : "") + 'Type the term</span>' +
         '<p class="definition">' + escapeHtml(card.definition) + "</p>" +
         '<form class="answer-form" id="answer-form" autocomplete="off">' +
           '<input type="text" id="answer" placeholder="Type the term" value="' + escapeHtml(cur.typed) + '"' + inputCls + (cur.result ? " disabled" : "") +
@@ -442,10 +461,10 @@
         '<p class="muted small">Batch ' + (session.batchIdx + 1) + " of " + session.batches.length + "</p>" +
         "<h1>Accuracy</h1>" +
         '<div class="big-stat ' + grade(r.accuracy) + '">' + r.accuracy + "%</div>" +
-        '<p class="muted">' + r.clean + " of " + r.size + " terms right on the first try in both rounds.</p>" +
+        '<p class="muted">' + r.clean + " of " + r.size + " terms right on the first try " + accuracyNote() + ".</p>" +
         '<div class="stats">' +
-          '<div class="stat"><b>' + r.mcMisses + "</b><span>misses, multiple choice</span></div>" +
-          '<div class="stat"><b>' + r.typeMisses + "</b><span>misses, writing</span></div>" +
+          (session.mode !== "write" ? '<div class="stat"><b>' + r.mcMisses + "</b><span>misses, multiple choice</span></div>" : "") +
+          (session.mode !== "mc" ? '<div class="stat"><b>' + r.typeMisses + "</b><span>misses, writing</span></div>" : "") +
           '<div class="stat"><b>' + r.correct + " / " + r.answered + "</b><span>answers correct</span></div>" +
         "</div>" +
         "<h2>Missed this batch</h2>" + missedTable(r.missed) +
@@ -472,7 +491,7 @@
         '<p class="muted small">' + escapeHtml(session.set.title) + "</p>" +
         "<h1>Session complete</h1>" +
         '<div class="big-stat ' + grade(acc) + '">' + acc + "%</div>" +
-        '<p class="muted">' + clean + " of " + total + " terms right on the first try in both rounds.</p>" +
+        '<p class="muted">' + clean + " of " + total + " terms right on the first try " + accuracyNote() + ".</p>" +
         '<div class="stats">' +
           '<div class="stat"><b>' + session.results.length + "</b><span>batches</span></div>" +
           '<div class="stat"><b>' + missed.length + "</b><span>terms missed</span></div>" +
