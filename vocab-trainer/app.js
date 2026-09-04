@@ -1,13 +1,18 @@
 /* Vocab Trainer
  *
- * Terms are studied in batches (default 15). Each batch has up to two rounds:
+ * Vocabulary-first studying across several courses. Each course has weekly
+ * term sets (files under sets/). Terms are studied in batches (default 15)
+ * with up to two rounds per batch:
  *   Round 1: for every term, see the definition and pick the term (multiple choice).
  *   Round 2: for every term, see the definition and type the term.
- * The study mode picks which rounds run: "both" (default), "write" only, or "mc" only.
  * A miss in either round shows the correct answer and pushes the term to the
- * end of that round's queue, so the round only ends when every term has been
- * answered correctly. Accuracy for a batch = terms answered right on the first
- * try in both rounds. Missed terms are listed after each batch and at the end.
+ * end of that round's queue. Batch accuracy = terms right on the first try.
+ * A week is "cleared" after a full-set writing or both-rounds session at
+ * CLEAR_THRESHOLD or better.
+ *
+ * The owner can remove terms and add their own from the term list; those
+ * edits live in localStorage as an overlay on the set files and can be
+ * exported as JSON to fold back into the repo.
  */
 (function () {
   "use strict";
@@ -15,42 +20,110 @@
   var DEFAULT_BATCH_SIZE = 15;
   var CHOICES = 4;
   var AUTO_ADVANCE_MS = 900;
-  var CLEAR_THRESHOLD = 90; // first-try accuracy needed to mark a week as cleared
   var MC_ADVANCE_MS = 500;
+  var CLEAR_THRESHOLD = 90; // first-try accuracy needed to mark a week as cleared
 
   var $app = document.getElementById("app");
   var $status = document.getElementById("topbar-status");
   var sets = window.VOCAB_SETS || [];
 
   var prefs = loadPrefs();
+  var progress = loadJson("vocab-trainer-progress"); // setId -> { best, last, lastAt, sessions, cleared }
+  var edits = loadJson("vocab-trainer-edits");       // setId -> { removed: [term], added: [{term, definition, alt}] }
+  var ui = { termsOpen: false, pendingRemove: null, exportOpen: false, addError: "", addDraft: { term: "", definition: "", alt: "" } };
   var session = null;      // active study session, or null on the home screen
   var advanceTimer = null; // pending auto-advance after a correct answer
 
-  // ---------- helpers ----------
+  // ---------- storage ----------
 
+  function loadJson(key) {
+    try { return JSON.parse(localStorage.getItem(key) || "{}") || {}; } catch (e) { return {}; }
+  }
+  function saveJson(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* ignore */ }
+  }
   function loadPrefs() {
-    var p = { setId: sets.length ? sets[0].id : null, shuffle: true, batchSize: DEFAULT_BATCH_SIZE, includePeople: false, mode: "both" };
-    try {
-      var saved = JSON.parse(localStorage.getItem("vocab-trainer-prefs") || "{}");
-      if (saved.setId && sets.some(function (s) { return s.id === saved.setId; })) p.setId = saved.setId;
-      if (typeof saved.shuffle === "boolean") p.shuffle = saved.shuffle;
-      if (typeof saved.includePeople === "boolean") p.includePeople = saved.includePeople;
-      if (saved.mode === "both" || saved.mode === "write" || saved.mode === "mc") p.mode = saved.mode;
-      if (saved.batchSize >= 1 && saved.batchSize <= 100) p.batchSize = saved.batchSize;
-    } catch (e) { /* ignore */ }
+    var p = { setId: null, course: null, shuffle: true, batchSize: DEFAULT_BATCH_SIZE, includePeople: false, mode: "both" };
+    var saved = loadJson("vocab-trainer-prefs");
+    if (saved.setId && sets.some(function (s) { return s.id === saved.setId; })) p.setId = saved.setId;
+    if (typeof saved.course === "string") p.course = saved.course;
+    if (typeof saved.shuffle === "boolean") p.shuffle = saved.shuffle;
+    if (typeof saved.includePeople === "boolean") p.includePeople = saved.includePeople;
+    if (saved.mode === "both" || saved.mode === "write" || saved.mode === "mc") p.mode = saved.mode;
+    if (saved.batchSize >= 1 && saved.batchSize <= 100) p.batchSize = saved.batchSize;
     return p;
   }
-  function savePrefs() {
-    try { localStorage.setItem("vocab-trainer-prefs", JSON.stringify(prefs)); } catch (e) { /* ignore */ }
+  function savePrefs() { saveJson("vocab-trainer-prefs", prefs); }
+
+  // ---------- courses and sets ----------
+
+  function courses() {
+    var seen = {}, out = [];
+    sets.forEach(function (s) { var c = s.course || "Other"; if (!seen[c]) { seen[c] = true; out.push(c); } });
+    return out.sort();
+  }
+  function currentCourse() {
+    var all = courses();
+    return all.indexOf(prefs.course) >= 0 ? prefs.course : all[0];
+  }
+  function setsForCourse(course) {
+    return sets.filter(function (s) { return (s.course || "Other") === course; })
+      .sort(function (a, b) { return (a.week || 0) - (b.week || 0); });
+  }
+  function currentSet() {
+    var inCourse = setsForCourse(currentCourse());
+    return inCourse.filter(function (s) { return s.id === prefs.setId; })[0] || inCourse[0] || null;
+  }
+  function setName(set) { return (set.week ? "Week " + set.week + " · " : "") + set.title; }
+  function isPerson(card) { return card.kind === "person"; }
+
+  // Set file cards minus removed ones, plus the owner's additions.
+  function editsFor(set) {
+    return edits[set.id] || { removed: [], added: [] };
+  }
+  function effectiveCards(set) {
+    var e = editsFor(set);
+    var removed = {};
+    e.removed.forEach(function (t) { removed[t.toLowerCase()] = true; });
+    var out = set.cards.filter(function (c) { return !removed[c.term.toLowerCase()]; });
+    e.added.forEach(function (c) { out.push({ term: c.term, definition: c.definition, alt: c.alt || [], custom: true }); });
+    return out;
+  }
+  function saveEdits() { saveJson("vocab-trainer-edits", edits); }
+  function removeTerm(set, term) {
+    var e = editsFor(set);
+    var wasAdded = e.added.some(function (c) { return c.term === term; });
+    if (wasAdded) e.added = e.added.filter(function (c) { return c.term !== term; });
+    else if (e.removed.indexOf(term) < 0) e.removed.push(term);
+    edits[set.id] = e; saveEdits();
+  }
+  function restoreTerm(set, term) {
+    var e = editsFor(set);
+    e.removed = e.removed.filter(function (t) { return t !== term; });
+    edits[set.id] = e; saveEdits();
+  }
+  function addTerm(set, term, definition, altText) {
+    term = term.trim(); definition = definition.trim();
+    if (!term || !definition) return "Both a term and a definition are needed.";
+    var exists = effectiveCards(set).some(function (c) { return normalize(c.term) === normalize(term); });
+    if (exists) return "\"" + term + "\" is already in this set.";
+    var alt = altText.split(",").map(function (a) { return a.trim(); }).filter(Boolean);
+    var e = editsFor(set);
+    e.added.push({ term: term, definition: definition, alt: alt });
+    e.removed = e.removed.filter(function (t) { return t.toLowerCase() !== term.toLowerCase(); });
+    edits[set.id] = e; saveEdits();
+    return "";
   }
 
-  var progress = loadProgress(); // setId -> { best, last, lastAt, sessions, cleared }
-  function loadProgress() {
-    try { return JSON.parse(localStorage.getItem("vocab-trainer-progress") || "{}") || {}; } catch (e) { return {}; }
+  // Indices (into effectiveCards) this session draws from: concepts, plus people if enabled.
+  function poolFor(cards) {
+    var out = [];
+    cards.forEach(function (c, i) { if (prefs.includePeople || !isPerson(c)) out.push(i); });
+    return out;
   }
-  function saveProgress() {
-    try { localStorage.setItem("vocab-trainer-progress", JSON.stringify(progress)); } catch (e) { /* ignore */ }
-  }
+
+  // ---------- progress ----------
+
   function recordResult(set, accuracy, countsForClearing) {
     var p = progress[set.id] || { best: 0, last: 0, lastAt: null, sessions: 0, cleared: false };
     p.sessions++;
@@ -61,29 +134,23 @@
       if (accuracy >= CLEAR_THRESHOLD) p.cleared = true;
     }
     progress[set.id] = p;
-    saveProgress();
+    saveJson("vocab-trainer-progress", progress);
     return p;
   }
   function statusOf(set) {
     var p = progress[set.id];
     if (!p) return { key: "new", label: "Not started" };
-    if (p.cleared) return { key: "cleared", label: "Cleared \u00b7 best " + p.best + "%" };
-    return { key: "progress", label: "In progress \u00b7 best " + p.best + "%" };
+    if (p.cleared) return { key: "cleared", label: "Cleared · best " + p.best + "%" };
+    return { key: "progress", label: "In progress · best " + p.best + "%" };
   }
-  function sortedSets() {
-    return sets.slice().sort(function (a, b) {
-      var c = String(a.course || "").localeCompare(String(b.course || ""));
-      return c || ((a.week || 0) - (b.week || 0));
-    });
-  }
-  function setName(set) { return (set.week ? "Week " + set.week + " \u00b7 " : "") + set.title; }
+
+  // ---------- helpers ----------
 
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
   }
-
   function shuffle(arr) {
     var a = arr.slice();
     for (var i = a.length - 1; i > 0; i--) {
@@ -92,13 +159,11 @@
     }
     return a;
   }
-
   function chunk(arr, n) {
     var out = [];
     for (var i = 0; i < arr.length; i += n) out.push(arr.slice(i, i + n));
     return out;
   }
-
   // Lower-case, strip accents, drop apostrophes and other punctuation, collapse whitespace.
   function normalize(s) {
     return String(s)
@@ -109,24 +174,15 @@
       .replace(/\s+/g, " ")
       .trim();
   }
-  function singular(s) {
-    return s.length > 3 && s.slice(-1) === "s" ? s.slice(0, -1) : s;
-  }
+  function singular(s) { return s.length > 3 && s.slice(-1) === "s" ? s.slice(0, -1) : s; }
   function answerMatches(card, typed) {
     var t = normalize(typed);
     if (!t) return false;
     var accepted = [card.term].concat(card.alt || []).map(normalize);
     return accepted.some(function (a) { return a === t || singular(a) === singular(t); });
   }
-
   function pct(n, d) { return d ? Math.round((n / d) * 100) : 0; }
   function grade(p) { return p >= 85 ? "ok" : p >= 60 ? "warn" : "bad"; }
-
-  function currentSet() {
-    return sets.filter(function (s) { return s.id === prefs.setId; })[0] || sets[0];
-  }
-
-  function isPerson(card) { return card.kind === "person"; }
 
   function rounds() { return (session ? session.mode : prefs.mode) === "both" ? 2 : 1; }
   function roundTitle(round) { return round === "mc" ? "Multiple choice" : "Writing"; }
@@ -139,27 +195,21 @@
     return mode === "both" ? "in both rounds" : "in the " + roundTitle(mode === "mc" ? "mc" : "type").toLowerCase() + " round";
   }
 
-  // Indices of the cards this session draws from (concepts, plus people if enabled).
-  function poolFor(set) {
-    var out = [];
-    set.cards.forEach(function (c, i) { if (prefs.includePeople || !isPerson(c)) out.push(i); });
-    return out;
-  }
-
   // ---------- session ----------
 
-  function startSession(set, cardIdxs, pool) {
+  function startSession(set, cards, cardIdxs, pool) {
     clearTimeout(advanceTimer);
     var order = prefs.shuffle ? shuffle(cardIdxs) : cardIdxs.slice();
     session = {
       set: set,
+      cards: cards,                    // effective cards at session start
       pool: pool,                      // distractors are drawn from here
       mode: prefs.mode,
       fullSet: cardIdxs.length === pool.length,
       recorded: false,
       batches: chunk(order, prefs.batchSize),
       batchIdx: 0,
-      results: [],                     // one summary per finished batch
+      results: [],
       batch: null,
       current: null,
       view: "question"
@@ -176,10 +226,10 @@
       queue: ids.slice(),
       mcDone: 0,
       typeDone: 0,
-      firstTry: {},        // cardIdx -> true (clean in both rounds) / false (missed at least once)
+      firstTry: {},        // cardIdx -> true (clean) / false (missed at least once)
       answered: 0,
       correct: 0,
-      missed: [],          // cardIdx, in the order first missed
+      missed: [],
       mcMisses: 0,
       typeMisses: 0
     };
@@ -194,13 +244,7 @@
       finishBatch(); return;
     }
     var ci = b.queue.shift();
-    session.current = {
-      ci: ci,
-      choices: b.round === "mc" ? makeChoices(ci) : null,
-      picked: null,
-      typed: "",
-      result: null
-    };
+    session.current = { ci: ci, choices: b.round === "mc" ? makeChoices(ci) : null, picked: null, typed: "", result: null };
     session.view = "question";
     render();
   }
@@ -222,13 +266,9 @@
     var b = session.batch;
     b.answered++;
     if (b.round === "mc") b.mcMisses++; else b.typeMisses++;
-    if (b.firstTry[ci] !== false) {
-      b.firstTry[ci] = false;
-      b.missed.push(ci);
-    }
-    b.queue.push(ci); // back to the end of this round
+    if (b.firstTry[ci] !== false) { b.firstTry[ci] = false; b.missed.push(ci); }
+    b.queue.push(ci);
   }
-
   function recordPass(ci) {
     var b = session.batch;
     b.answered++;
@@ -242,39 +282,29 @@
     if (session.batch.round !== "mc" || cur.result) return;
     cur.picked = idx;
     if (idx === cur.ci) {
-      recordPass(cur.ci);
-      cur.result = "ok";
-      render();
+      recordPass(cur.ci); cur.result = "ok"; render();
       advanceTimer = setTimeout(nextItem, MC_ADVANCE_MS);
     } else {
-      recordMiss(cur.ci);
-      cur.result = "bad";
-      render();
+      recordMiss(cur.ci); cur.result = "bad"; render();
     }
   }
-
   function answerTyped(text) {
     var cur = session.current;
     if (session.batch.round !== "type" || cur.result) return;
     cur.typed = text;
-    if (answerMatches(session.set.cards[cur.ci], text)) {
-      recordPass(cur.ci);
-      cur.result = "ok";
-      render();
+    if (answerMatches(session.cards[cur.ci], text)) {
+      recordPass(cur.ci); cur.result = "ok"; render();
       advanceTimer = setTimeout(nextItem, AUTO_ADVANCE_MS);
     } else {
-      cur.result = "bad"; // not recorded until Continue / Override
-      render();
+      cur.result = "bad"; render(); // recorded on Continue / Override
     }
   }
-
   function continueAfterFeedback() {
     var cur = session.current;
     if (!cur || !cur.result) return;
     if (session.batch.round === "type" && cur.result === "bad") recordMiss(cur.ci);
     nextItem();
   }
-
   function overrideCorrect() {
     var cur = session.current;
     if (!cur || session.batch.round !== "type" || cur.result !== "bad") return;
@@ -287,25 +317,17 @@
     var cleanCount = 0;
     b.ids.forEach(function (ci) { if (b.firstTry[ci] === true) cleanCount++; });
     session.results.push({
-      size: b.size,
-      clean: cleanCount,
-      accuracy: pct(cleanCount, b.size),
-      answered: b.answered,
-      correct: b.correct,
-      mcMisses: b.mcMisses,
-      typeMisses: b.typeMisses,
-      missed: b.missed.slice()
+      size: b.size, clean: cleanCount, accuracy: pct(cleanCount, b.size),
+      answered: b.answered, correct: b.correct, mcMisses: b.mcMisses, typeMisses: b.typeMisses, missed: b.missed.slice()
     });
     session.view = "batch-summary";
     render();
   }
-
   function nextBatch() {
     session.batchIdx++;
     if (session.batchIdx >= session.batches.length) { session.view = "final"; render(); return; }
     startBatch();
   }
-
   function allMissed() {
     var seen = {}, out = [];
     session.results.forEach(function (r) {
@@ -313,7 +335,6 @@
     });
     return out;
   }
-
   function goHome() {
     clearTimeout(advanceTimer);
     session = null;
@@ -330,55 +351,116 @@
     return renderFinal();
   }
 
+  function courseTabsHtml(course) {
+    var all = courses();
+    if (all.length < 2) return "";
+    return '<div class="tabs">' + all.map(function (c) {
+      return '<button class="tab' + (c === course ? " active" : "") + '" data-course="' + escapeHtml(c) + '">' + escapeHtml(c) + "</button>";
+    }).join("") + "</div>";
+  }
+
+  function weekListHtml(course, set) {
+    return '<div class="weeks">' + setsForCourse(course).map(function (s) {
+      var st = statusOf(s);
+      var n = effectiveCards(s).filter(function (c) { return !isPerson(c); }).length;
+      return '<button class="week' + (set && s.id === set.id ? " selected" : "") + '" data-set="' + escapeHtml(s.id) + '">' +
+        '<span class="week-name">' + escapeHtml(setName(s)) + "<small>" + n + " terms</small></span>" +
+        '<span class="badge ' + st.key + '">' + st.label + "</span></button>";
+    }).join("") + "</div>";
+  }
+
+  function termListHtml(set, cards, pool) {
+    var e = editsFor(set);
+    var rows = pool.map(function (i) {
+      var c = cards[i];
+      var pending = ui.pendingRemove === c.term;
+      var actions = pending
+        ? '<span class="confirm">Remove <b>' + escapeHtml(c.term) + '</b>? <button class="btn small danger" data-remove-confirm="' + escapeHtml(c.term) + '">Remove</button> <button class="btn small" data-remove-cancel>Cancel</button></span>'
+        : '<button class="btn link small" data-remove="' + escapeHtml(c.term) + '" title="Remove this term">Remove</button>';
+      return '<div class="term-row' + (pending ? " pending" : "") + '"><div class="term-body"><b>' + escapeHtml(c.term) +
+        (c.custom ? ' <span class="tag">added by you</span>' : "") + "</b>" + escapeHtml(c.definition) + "</div>" + actions + "</div>";
+    }).join("");
+
+    var removed = e.removed.length
+      ? '<details class="removed"><summary>Removed terms (' + e.removed.length + ")</summary>" +
+        e.removed.map(function (t) {
+          return '<div class="term-row"><div class="term-body"><b>' + escapeHtml(t) + '</b></div><button class="btn link small" data-restore="' + escapeHtml(t) + '">Restore</button></div>';
+        }).join("") + "</details>"
+      : "";
+
+    var d = ui.addDraft;
+    var addForm =
+      '<form id="add-form" class="add-form">' +
+        "<h3>Add a term</h3>" +
+        '<input type="text" id="add-term" placeholder="Term" value="' + escapeHtml(d.term) + '" autocomplete="off">' +
+        '<textarea id="add-def" placeholder="Definition (don\'t repeat the term in it)" rows="2">' + escapeHtml(d.definition) + "</textarea>" +
+        '<input type="text" id="add-alt" placeholder="Other accepted answers, comma-separated (optional)" value="' + escapeHtml(d.alt) + '" autocomplete="off">' +
+        (ui.addError ? '<div class="form-error">' + escapeHtml(ui.addError) + "</div>" : "") +
+        '<div class="row"><button class="btn primary" type="submit">Add term</button>' +
+        '<span class="small muted">Saved in this browser. Use "Export edits" to get them into the set file.</span></div>' +
+      "</form>";
+
+    var hasEdits = e.removed.length || e.added.length;
+    var exportBlock = hasEdits
+      ? '<div class="row" style="margin-top:12px"><button class="btn link small" id="export-toggle">' + (ui.exportOpen ? "Hide export" : "Export edits") + "</button></div>" +
+        (ui.exportOpen ? '<textarea class="export" readonly rows="6">' + escapeHtml(JSON.stringify({ setId: set.id, removed: e.removed, added: e.added }, null, 2)) + "</textarea>" : "")
+      : "";
+
+    return '<div id="term-list" class="term-list">' + rows + removed + addForm + exportBlock + "</div>";
+  }
+
   function renderHome() {
     $status.textContent = "";
     if (!sets.length) {
       $app.innerHTML = '<div class="card"><h1>No term sets found</h1><p>Add a file under <code>sets/</code> and include it in <code>index.html</code>.</p></div>';
       return;
     }
+    var course = currentCourse();
     var set = currentSet();
-    var weekRows = sortedSets().map(function (s) {
-      var st = statusOf(s);
-      var n = s.cards.filter(function (c) { return !isPerson(c); }).length;
-      return '<button class="week' + (s.id === set.id ? " selected" : "") + '" data-set="' + escapeHtml(s.id) + '">' +
-        '<span class="week-name">' + escapeHtml(setName(s)) + '<small>' + escapeHtml(s.course || "") + " &middot; " + n + " terms</small></span>" +
-        '<span class="badge ' + st.key + '">' + st.label + "</span></button>";
-    }).join("");
-    var pool = poolFor(set);
-    var people = set.cards.filter(isPerson).length;
+    var cards = set ? effectiveCards(set) : [];
+    var pool = set ? poolFor(cards) : [];
+    var people = cards.filter(isPerson).length;
     var batches = Math.ceil(pool.length / prefs.batchSize);
 
     $app.innerHTML =
       '<div class="card">' +
         "<h1>Clear this week's vocabulary first</h1>" +
         '<p class="muted">Do this before the readings, lectures, or slides. A week is cleared once you finish every term in a writing or both-rounds session with at least ' + CLEAR_THRESHOLD + "% first-try accuracy.</p>" +
-        '<div class="weeks">' + weekRows + "</div>" +
-        '<h2 style="margin-top:22px">' + escapeHtml(setName(set)) + "</h2>" +
-        (set.materials && set.materials.length ? '<p class="small muted">Covers: ' + set.materials.map(escapeHtml).join(", ") + "</p>" : "") +
-        '<label class="field"><span>Study mode</span><select id="mode">' +
-          '<option value="both"' + (prefs.mode === "both" ? " selected" : "") + ">Both rounds: multiple choice, then writing</option>" +
-          '<option value="write"' + (prefs.mode === "write" ? " selected" : "") + ">Writing only</option>" +
-          '<option value="mc"' + (prefs.mode === "mc" ? " selected" : "") + ">Multiple choice only</option>" +
-        "</select></label>" +
-        '<div class="row">' +
-          '<label class="field" style="flex:1"><span>Batch size</span><input id="batch-size" type="number" min="1" max="100" value="' + prefs.batchSize + '"></label>' +
-          '<div style="margin-top:24px">' +
-            '<label class="check"><input id="shuffle" type="checkbox"' + (prefs.shuffle ? " checked" : "") + "> Shuffle terms</label>" +
-            (people ? '<label class="check"><input id="include-people" type="checkbox"' + (prefs.includePeople ? " checked" : "") + "> Include philosophers &amp; works (" + people + ")</label>" : "") +
+        courseTabsHtml(course) +
+        weekListHtml(course, set) +
+        (set ? (
+          '<h2 style="margin-top:22px">' + escapeHtml(course) + " &middot; " + escapeHtml(setName(set)) + "</h2>" +
+          (set.materials && set.materials.length ? '<p class="small muted">Covers: ' + set.materials.map(escapeHtml).join(", ") + "</p>" : "") +
+          '<label class="field"><span>Study mode</span><select id="mode">' +
+            '<option value="both"' + (prefs.mode === "both" ? " selected" : "") + ">Both rounds: multiple choice, then writing</option>" +
+            '<option value="write"' + (prefs.mode === "write" ? " selected" : "") + ">Writing only</option>" +
+            '<option value="mc"' + (prefs.mode === "mc" ? " selected" : "") + ">Multiple choice only</option>" +
+          "</select></label>" +
+          '<div class="row">' +
+            '<label class="field" style="flex:1"><span>Batch size</span><input id="batch-size" type="number" min="1" max="100" value="' + prefs.batchSize + '"></label>' +
+            '<div style="margin-top:24px">' +
+              '<label class="check"><input id="shuffle" type="checkbox"' + (prefs.shuffle ? " checked" : "") + "> Shuffle terms</label>" +
+              (people ? '<label class="check"><input id="include-people" type="checkbox"' + (prefs.includePeople ? " checked" : "") + "> Include philosophers &amp; works (" + people + ")</label>" : "") +
+            "</div>" +
           "</div>" +
-        "</div>" +
-        '<p class="small muted">' + pool.length + " terms &rarr; " + batches + " batch" + (batches === 1 ? "" : "es") + "</p>" +
-        '<div class="row"><button class="btn primary" id="start">Start</button>' +
-        '<button class="btn link" id="toggle-terms">Show all terms</button></div>' +
-        '<div id="term-list" class="term-list" style="margin-top:16px" hidden>' +
-          pool.map(function (i) { var c = set.cards[i]; return "<div><b>" + escapeHtml(c.term) + "</b>" + escapeHtml(c.definition) + "</div>"; }).join("") +
-        "</div>" +
+          '<p class="small muted">' + pool.length + " terms &rarr; " + batches + " batch" + (batches === 1 ? "" : "es") + "</p>" +
+          '<div class="row"><button class="btn primary" id="start"' + (pool.length ? "" : " disabled") + ">Start</button>" +
+          '<button class="btn link" id="toggle-terms">' + (ui.termsOpen ? "Hide terms" : "Show all terms") + "</button></div>" +
+          (ui.termsOpen ? termListHtml(set, cards, pool) : "")
+        ) : '<p class="muted">No weeks in this course yet.</p>') +
         '<p class="small muted" style="margin-top:18px">Shortcuts: <span class="kbd">1</span>-<span class="kbd">4</span> pick a choice, <span class="kbd">Enter</span> submits or continues.</p>' +
       "</div>";
 
-    Array.prototype.forEach.call($app.querySelectorAll("[data-set]"), function (btn) {
-      btn.onclick = function () { prefs.setId = btn.getAttribute("data-set"); savePrefs(); render(); };
+    // course + week selection
+    Array.prototype.forEach.call($app.querySelectorAll("[data-course]"), function (btn) {
+      btn.onclick = function () { prefs.course = btn.getAttribute("data-course"); prefs.setId = null; ui.pendingRemove = null; savePrefs(); render(); };
     });
+    Array.prototype.forEach.call($app.querySelectorAll("[data-set]"), function (btn) {
+      btn.onclick = function () { prefs.setId = btn.getAttribute("data-set"); ui.pendingRemove = null; savePrefs(); render(); };
+    });
+    if (!set) return;
+
+    // settings
     document.getElementById("mode").onchange = function (e) { prefs.mode = e.target.value; savePrefs(); };
     document.getElementById("batch-size").onchange = function (e) {
       var v = parseInt(e.target.value, 10);
@@ -388,15 +470,47 @@
     document.getElementById("shuffle").onchange = function (e) { prefs.shuffle = e.target.checked; savePrefs(); };
     var inc = document.getElementById("include-people");
     if (inc) inc.onchange = function (e) { prefs.includePeople = e.target.checked; savePrefs(); render(); };
-    document.getElementById("toggle-terms").onclick = function (e) {
-      var list = document.getElementById("term-list");
-      list.hidden = !list.hidden;
-      e.target.textContent = list.hidden ? "Show all terms" : "Hide terms";
-    };
+    document.getElementById("toggle-terms").onclick = function () { ui.termsOpen = !ui.termsOpen; ui.pendingRemove = null; render(); };
     document.getElementById("start").onclick = function () {
-      var p = poolFor(set);
-      startSession(set, p, p);
+      var c = effectiveCards(set), p = poolFor(c);
+      startSession(set, c, p, p);
     };
+
+    // term list editing
+    Array.prototype.forEach.call($app.querySelectorAll("[data-remove]"), function (btn) {
+      btn.onclick = function () { ui.pendingRemove = btn.getAttribute("data-remove"); render(); scrollToPending(); };
+    });
+    Array.prototype.forEach.call($app.querySelectorAll("[data-remove-confirm]"), function (btn) {
+      btn.onclick = function () { removeTerm(set, btn.getAttribute("data-remove-confirm")); ui.pendingRemove = null; render(); };
+    });
+    Array.prototype.forEach.call($app.querySelectorAll("[data-remove-cancel]"), function (btn) {
+      btn.onclick = function () { ui.pendingRemove = null; render(); };
+    });
+    Array.prototype.forEach.call($app.querySelectorAll("[data-restore]"), function (btn) {
+      btn.onclick = function () { restoreTerm(set, btn.getAttribute("data-restore")); render(); };
+    });
+    var form = document.getElementById("add-form");
+    if (form) {
+      form.onsubmit = function (e) {
+        e.preventDefault();
+        var term = document.getElementById("add-term").value;
+        var def = document.getElementById("add-def").value;
+        var alt = document.getElementById("add-alt").value;
+        var err = addTerm(set, term, def, alt);
+        if (err) { ui.addError = err; ui.addDraft = { term: term, definition: def, alt: alt }; }
+        else { ui.addError = ""; ui.addDraft = { term: "", definition: "", alt: "" }; }
+        render();
+        var f = document.getElementById("add-form");
+        if (f) f.scrollIntoView({ block: "nearest" });
+      };
+    }
+    var ex = document.getElementById("export-toggle");
+    if (ex) ex.onclick = function () { ui.exportOpen = !ui.exportOpen; render(); };
+  }
+
+  function scrollToPending() {
+    var el = $app.querySelector(".term-row.pending");
+    if (el) el.scrollIntoView({ block: "nearest" });
   }
 
   function progressHtml() {
@@ -411,13 +525,13 @@
 
   function renderQuestion() {
     var cur = session.current;
-    var card = session.set.cards[cur.ci];
+    var card = session.cards[cur.ci];
     var b = session.batch;
     $status.textContent = "Batch " + (session.batchIdx + 1) + "/" + session.batches.length + " · " + (rounds() === 2 ? (b.round === "mc" ? "Round 1" : "Round 2") : roundTitle(b.round));
 
     var body;
     if (b.round === "mc") {
-      body = '<span class="stage-tag">' + (rounds() === 2 ? "Round 1 · " : "") + 'Pick the term</span>' +
+      body = '<span class="stage-tag">' + (rounds() === 2 ? "Round 1 · " : "") + "Pick the term</span>" +
         '<p class="definition">' + escapeHtml(card.definition) + "</p>" +
         '<div class="choices">' +
         cur.choices.map(function (ci, n) {
@@ -427,7 +541,7 @@
             else if (ci === cur.picked) cls += " wrong";
           }
           return '<button class="' + cls + '" data-choice="' + ci + '"' + (cur.result ? " disabled" : "") + ">" +
-            '<span class="key">' + (n + 1) + "</span><span>" + escapeHtml(session.set.cards[ci].term) + "</span></button>";
+            '<span class="key">' + (n + 1) + "</span><span>" + escapeHtml(session.cards[ci].term) + "</span></button>";
         }).join("") +
         "</div>";
       if (cur.result === "bad") {
@@ -435,8 +549,8 @@
           '<div class="actions"><button class="btn primary" id="continue">Continue</button><span class="small muted">or press Enter</span></div></div>';
       }
     } else {
-      var inputCls = cur.result === "ok" ? " class=\"correct\"" : cur.result === "bad" ? " class=\"wrong\"" : "";
-      body = '<span class="stage-tag">' + (rounds() === 2 ? "Round 2 · " : "") + 'Type the term</span>' +
+      var inputCls = cur.result === "ok" ? ' class="correct"' : cur.result === "bad" ? ' class="wrong"' : "";
+      body = '<span class="stage-tag">' + (rounds() === 2 ? "Round 2 · " : "") + "Type the term</span>" +
         '<p class="definition">' + escapeHtml(card.definition) + "</p>" +
         '<form class="answer-form" id="answer-form" autocomplete="off">' +
           '<input type="text" id="answer" placeholder="Type the term" value="' + escapeHtml(cur.typed) + '"' + inputCls + (cur.result ? " disabled" : "") +
@@ -462,8 +576,7 @@
     var form = document.getElementById("answer-form");
     if (form) {
       form.onsubmit = function (e) { e.preventDefault(); answerTyped(document.getElementById("answer").value); };
-      var input = document.getElementById("answer");
-      if (!cur.result) input.focus();
+      if (!cur.result) document.getElementById("answer").focus();
     }
     var cont = document.getElementById("continue");
     if (cont) { cont.onclick = continueAfterFeedback; cont.focus(); }
@@ -490,7 +603,7 @@
     if (!missedIdxs.length) return '<p class="muted">Nothing missed. Clean sweep.</p>';
     return "<table><thead><tr><th>Term</th><th>Definition</th></tr></thead><tbody>" +
       missedIdxs.map(function (ci) {
-        var c = session.set.cards[ci];
+        var c = session.cards[ci];
         return '<tr><td class="term">' + escapeHtml(c.term) + "</td><td>" + escapeHtml(c.definition) + "</td></tr>";
       }).join("") + "</tbody></table>";
   }
@@ -499,7 +612,6 @@
     var r = session.results[session.results.length - 1];
     var isLast = session.batchIdx + 1 >= session.batches.length;
     $status.textContent = "Batch " + (session.batchIdx + 1) + "/" + session.batches.length + " done";
-
     $app.innerHTML =
       '<div class="card">' +
         '<p class="muted small">Batch ' + (session.batchIdx + 1) + " of " + session.batches.length + "</p>" +
@@ -517,7 +629,6 @@
           '<button class="btn link" id="home">Quit to home</button>' +
         "</div>" +
       "</div>";
-
     var next = document.getElementById("next");
     next.onclick = nextBatch; next.focus();
     document.getElementById("home").onclick = goHome;
@@ -540,7 +651,7 @@
 
     $app.innerHTML =
       '<div class="card">' +
-        '<p class="muted small">' + escapeHtml(session.set.title) + "</p>" +
+        '<p class="muted small">' + escapeHtml((session.set.course || "") + " · " + setName(session.set)) + "</p>" +
         "<h1>Session complete</h1>" +
         '<div class="big-stat ' + grade(acc) + '">' + acc + "%</div>" +
         '<p class="muted">' + clean + " of " + total + " terms right on the first try " + accuracyNote() + ".</p>" +
@@ -566,8 +677,8 @@
       "</div>";
 
     var pm = document.getElementById("practice-missed");
-    if (pm) pm.onclick = function () { startSession(session.set, missed, session.pool); };
-    document.getElementById("again").onclick = function () { startSession(session.set, session.pool, session.pool); };
+    if (pm) pm.onclick = function () { startSession(session.set, session.cards, missed, session.pool); };
+    document.getElementById("again").onclick = function () { startSession(session.set, session.cards, session.pool, session.pool); };
     document.getElementById("home").onclick = goHome;
   }
 
@@ -580,11 +691,7 @@
       return;
     }
     var cur = session.current;
-    if (cur.result && e.key === "Enter") {
-      e.preventDefault();
-      continueAfterFeedback();
-      return;
-    }
+    if (cur.result && e.key === "Enter") { e.preventDefault(); continueAfterFeedback(); return; }
     if (session.batch.round === "mc" && !cur.result && /^[1-9]$/.test(e.key)) {
       var idx = parseInt(e.key, 10) - 1;
       if (idx < cur.choices.length) { e.preventDefault(); answerChoice(cur.choices[idx]); }

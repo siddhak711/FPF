@@ -5,7 +5,8 @@ vocabulary-first studying: clear a week's terms before opening that week's
 readings, lectures, or slides. No build step, no dependencies: open
 `index.html` in a browser or host it as a static site.
 
-The home screen lists each course week with its status. A week is **cleared**
+The home screen has a tab per course and lists each course's weeks with a
+status. A week is **cleared**
 once you finish every term in a writing or both-rounds session with at least
 90% first-try accuracy. Progress is stored in your browser.
 
@@ -30,6 +31,15 @@ Typed answers are checked case-insensitively, ignoring punctuation, accents,
 and extra spaces, and tolerating a trailing "s". Each card can list `alt`
 answers (e.g. `"Kant"` for `"Immanuel Kant"`). If the checker rejects an answer
 you think was right, use **Override: I was right**.
+
+## Editing terms in the app
+
+"Show all terms" lists the week's terms. **Remove** on a row asks for
+confirmation, then hides that term; removed terms sit in a collapsible list
+with a **Restore** button. The form at the bottom adds a term (term,
+definition, optional accepted spellings). These edits are stored in your
+browser, not in the set file. **Export edits** shows them as JSON to paste
+back so the set file can be updated for good.
 
 ## Adding a term set
 
