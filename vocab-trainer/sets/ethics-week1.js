@@ -145,7 +145,7 @@ window.VOCAB_SETS.push({
       definition: "Greek philosopher (384-322 BCE), in many ways the first great Western moral philosopher; wrote the Nicomachean Ethics and the Eudemian Ethics." },
     { kind: "person", term: "Nicomachean Ethics", alt: ["The Nicomachean Ethics"],
       definition: "Aristotle's book whose aim is to say what it is to live one's life well; it deals with both self-regarding and other-regarding considerations." },
-    { term: "Eudaimonia", alt: ["Eudaemonia", "Flourishing"],
+    { term: "Eudaimonia", alt: ["Eudaemonia"],
       definition: "Aristotle's word for the state of someone who is living well; \"flourishing,\" often misleadingly translated as \"happiness.\"" },
     { term: "Arete", alt: ["Arête"],
       definition: "Greek word usually translated \"virtue\" but probably better rendered as \"excellence.\"" },

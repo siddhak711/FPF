@@ -69,6 +69,9 @@ its own definition, or the multiple-choice round gives it away.
 
 ## Included sets
 
-- `sets/ethics-week1.js`: 69 terms and concepts from *Week 1: An Introduction
-  to Ethics* (meta-ethics, first-order ethics, virtue ethics, and the diversity
-  of ethical language), plus 17 optional philosophers and works.
+- Ethics, week 1 (`sets/ethics-week1.js`): 69 concepts from *An Introduction
+  to Ethics*, plus 17 optional philosophers and works.
+- Operations Management, week 1 (`sets/opsmgmt-week1.js`): 16 process
+  analysis terms from the session 2 pre-class slides.
+- Economics of Global Business, week 1 (`sets/egb-week1.js`): 50 concepts
+  from the intro and national accounts slides, plus the textbook author.
