@@ -455,7 +455,7 @@
             '<label class="field" style="flex:0 0 140px"><span>Batch size</span><input id="batch-size" type="number" min="1" max="100" value="' + prefs.batchSize + '"></label>' +
             '<div class="toggles" style="padding-bottom:10px; margin-left:auto">' +
               '<label class="check"><input id="shuffle" type="checkbox"' + (prefs.shuffle ? " checked" : "") + "> Shuffle terms</label>" +
-              (people ? '<label class="check"><input id="include-people" type="checkbox"' + (prefs.includePeople ? " checked" : "") + "> Include philosophers &amp; works (" + people + ")</label>" : "") +
+              (people ? '<label class="check"><input id="include-people" type="checkbox"' + (prefs.includePeople ? " checked" : "") + "> Include people &amp; works (" + people + ")</label>" : "") +
             "</div>" +
           "</div>" +
           '<p class="small muted" style="margin-top:14px">' + pool.length + " terms &middot; " + batches + " batch" + (batches === 1 ? "" : "es") + " of " + prefs.batchSize + "</p>" +

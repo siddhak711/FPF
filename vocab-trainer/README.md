@@ -64,7 +64,7 @@ back so the set file can be updated for good.
 
 The set then appears in the week list on the home screen. Cards with
 `kind: "person"` (philosophers, authors, works) are hidden unless the
-"Include philosophers & works" box is ticked. Avoid repeating the term inside
+"Include people & works" box is ticked. Avoid repeating the term inside
 its own definition, or the multiple-choice round gives it away.
 
 ## Included sets
