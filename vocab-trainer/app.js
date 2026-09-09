@@ -50,7 +50,7 @@
     if (typeof saved.shuffle === "boolean") p.shuffle = saved.shuffle;
     if (typeof saved.includePeople === "boolean") p.includePeople = saved.includePeople;
     if (saved.mode === "both" || saved.mode === "write" || saved.mode === "mc") p.mode = saved.mode;
-    if (saved.batchSize >= 1 && saved.batchSize <= 100) p.batchSize = saved.batchSize;
+    if (saved.batchSize === "all" || (saved.batchSize >= 1 && saved.batchSize <= 100)) p.batchSize = saved.batchSize;
     if (saved.sourcesOff && typeof saved.sourcesOff === "object") p.sourcesOff = saved.sourcesOff;
     return p;
   }
@@ -243,6 +243,10 @@
   }
   function answerMatches(card, typed, others) { return matchQuality(card, typed, others) !== null; }
   function pct(n, d) { return d ? Math.round((n / d) * 100) : 0; }
+  // Batch size in effect for a session over `count` cards ("all" = one batch).
+  function batchSizeFor(count) {
+    return prefs.batchSize === "all" ? Math.max(1, count) : prefs.batchSize;
+  }
   function grade(p) { return p >= 85 ? "ok" : p >= 60 ? "warn" : "bad"; }
 
   function rounds() { return (session ? session.mode : prefs.mode) === "both" ? 2 : 1; }
@@ -268,7 +272,7 @@
       mode: prefs.mode,
       fullSet: cardIdxs.length === pool.length,
       recorded: false,
-      batches: chunk(order, prefs.batchSize),
+      batches: chunk(order, batchSizeFor(order.length)),
       batchIdx: 0,
       results: [],
       batch: null,
@@ -509,7 +513,7 @@
             escapeHtml(materialName(file)) + ' <span class="muted small">' + n + " terms</span></label>";
         }).join("") + "</div>";
     }
-    var batches = Math.ceil(pool.length / prefs.batchSize);
+    var batches = Math.ceil(pool.length / batchSizeFor(pool.length));
 
     $app.innerHTML =
       '<div class="' + cardClass() + '">' +
@@ -527,14 +531,19 @@
             '<button data-mode="write" class="' + (prefs.mode === "write" ? "active" : "") + '">Writing only</button>' +
             '<button data-mode="mc" class="' + (prefs.mode === "mc" ? "active" : "") + '">Multiple choice only</button>' +
           "</div>" +
-          '<div class="row" style="align-items:flex-end; margin-top:6px">' +
-            '<label class="field" style="flex:0 0 140px"><span>Batch size</span><input id="batch-size" type="number" min="1" max="100" value="' + prefs.batchSize + '"></label>' +
-            '<div class="toggles" style="padding-bottom:10px; margin-left:auto">' +
+          '<label class="field"><span>Batch size</span></label>' +
+          '<div class="segmented" id="batch-size">' +
+            [10, 15, 20, "all"].map(function (v) {
+              return '<button data-batch="' + v + '" class="' + (String(prefs.batchSize) === String(v) ? "active" : "") + '">' + (v === "all" ? "All terms" : v) + "</button>";
+            }).join("") +
+          "</div>" +
+          '<div class="row" style="margin-top:18px">' +
+            '<div class="toggles">' +
               '<label class="check"><input id="shuffle" type="checkbox"' + (prefs.shuffle ? " checked" : "") + "> Shuffle terms</label>" +
               (people ? '<label class="check"><input id="include-people" type="checkbox"' + (prefs.includePeople ? " checked" : "") + "> Include people &amp; works (" + people + ")</label>" : "") +
             "</div>" +
           "</div>" +
-          '<p class="small muted" style="margin-top:14px">' + pool.length + " terms &middot; " + batches + " batch" + (batches === 1 ? "" : "es") + " of " + prefs.batchSize + "</p>" +
+          '<p class="small muted" style="margin-top:14px">' + pool.length + " terms &middot; " + (prefs.batchSize === "all" ? "one batch" : batches + " batch" + (batches === 1 ? "" : "es") + " of " + prefs.batchSize) + "</p>" +
           '<div class="row"><button class="btn primary" id="start"' + (pool.length ? "" : " disabled") + ">Start studying</button>" +
           '<button class="btn link" id="toggle-terms">' + (ui.termsOpen ? "Hide terms" : "Show all terms") + "</button></div>" +
           (ui.termsOpen ? termListHtml(set, cards, pool) : "")
@@ -558,11 +567,13 @@
     Array.prototype.forEach.call($app.querySelectorAll("[data-mode]"), function (btn) {
       btn.onclick = function () { prefs.mode = btn.getAttribute("data-mode"); savePrefs(); render(); };
     });
-    document.getElementById("batch-size").onchange = function (e) {
-      var v = parseInt(e.target.value, 10);
-      prefs.batchSize = isNaN(v) ? DEFAULT_BATCH_SIZE : Math.max(1, Math.min(100, v));
-      savePrefs(); render();
-    };
+    Array.prototype.forEach.call($app.querySelectorAll("[data-batch]"), function (btn) {
+      btn.onclick = function () {
+        var v = btn.getAttribute("data-batch");
+        prefs.batchSize = v === "all" ? "all" : parseInt(v, 10);
+        savePrefs(); render();
+      };
+    });
     document.getElementById("shuffle").onchange = function (e) { prefs.shuffle = e.target.checked; savePrefs(); };
     Array.prototype.forEach.call($app.querySelectorAll("[data-source]"), function (box) {
       box.onchange = function () { toggleSource(set, parseInt(box.getAttribute("data-source"), 10), box.checked); render(); };

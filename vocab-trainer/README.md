@@ -14,7 +14,7 @@ once you finish every term in a writing or both-rounds session with at least
 
 ## How a session works
 
-1. Terms are shuffled and split into batches of 15 (configurable on the home screen).
+1. Terms are shuffled and split into batches of 10, 15, or 20, or studied as one batch with "All terms" (picked on the home screen).
 2. Each batch has up to two rounds, chosen by the **Study mode** on the home
    screen (both rounds, writing only, or multiple choice only). You always see
    the **definition**:
