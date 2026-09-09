@@ -175,12 +175,48 @@
       .trim();
   }
   function singular(s) { return s.length > 3 && s.slice(-1) === "s" ? s.slice(0, -1) : s; }
-  function answerMatches(card, typed) {
-    var t = normalize(typed);
-    if (!t) return false;
-    var accepted = [card.term].concat(card.alt || []).map(normalize);
-    return accepted.some(function (a) { return a === t || singular(a) === singular(t); });
+
+  // Edit distance (insertions, deletions, substitutions) between two strings.
+  function editDistance(a, b) {
+    if (a === b) return 0;
+    if (!a.length) return b.length;
+    if (!b.length) return a.length;
+    var prev = [], cur = [], i, j;
+    for (j = 0; j <= b.length; j++) prev[j] = j;
+    for (i = 1; i <= a.length; i++) {
+      cur[0] = i;
+      for (j = 1; j <= b.length; j++) {
+        var cost = a.charCodeAt(i - 1) === b.charCodeAt(j - 1) ? 0 : 1;
+        cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + cost);
+      }
+      var tmp = prev; prev = cur; cur = tmp;
+    }
+    return prev[b.length];
   }
+  // How many typos to forgive, by length of the accepted answer.
+  function allowedTypos(answer) {
+    var n = answer.replace(/\s/g, "").length;
+    return n <= 4 ? 0 : n <= 8 ? 1 : n <= 14 ? 2 : 3;
+  }
+  // Returns "exact", "near", or null. `others` are the other cards in play; a
+  // typo that exactly spells one of them is never forgiven.
+  function matchQuality(card, typed, others) {
+    var t = normalize(typed);
+    if (!t) return null;
+    var accepted = [card.term].concat(card.alt || []).map(normalize);
+    var exact = accepted.some(function (a) { return a === t || singular(a) === singular(t); });
+    if (exact) return "exact";
+    var collides = (others || []).some(function (c) {
+      if (c === card) return false;
+      return [c.term].concat(c.alt || []).map(normalize).some(function (a) { return a === t || singular(a) === singular(t); });
+    });
+    if (collides) return null;
+    var near = accepted.some(function (a) {
+      return editDistance(singular(a), singular(t)) <= allowedTypos(singular(a));
+    });
+    return near ? "near" : null;
+  }
+  function answerMatches(card, typed, others) { return matchQuality(card, typed, others) !== null; }
   function pct(n, d) { return d ? Math.round((n / d) * 100) : 0; }
   function grade(p) { return p >= 85 ? "ok" : p >= 60 ? "warn" : "bad"; }
 
@@ -292,7 +328,9 @@
     var cur = session.current;
     if (session.batch.round !== "type" || cur.result) return;
     cur.typed = text;
-    if (answerMatches(session.cards[cur.ci], text)) {
+    var quality = matchQuality(session.cards[cur.ci], text, session.cards);
+    if (quality) {
+      cur.near = quality === "near";
       recordPass(cur.ci); cur.result = "ok"; render();
       advanceTimer = setTimeout(nextItem, AUTO_ADVANCE_MS);
     } else {
@@ -581,7 +619,8 @@
           '<button class="btn primary" type="submit"' + (cur.result ? " disabled" : "") + ">Answer</button>" +
         "</form>";
       if (cur.result === "ok") {
-        body += '<div class="feedback ok"><strong>Correct!</strong> ' + escapeHtml(card.term) +
+        body += '<div class="feedback ok"><strong>' + (cur.near ? "Close enough." : "Correct!") + "</strong> " +
+          (cur.near ? "Exact spelling: <b>" + escapeHtml(card.term) + "</b>" : escapeHtml(card.term)) +
           '<div class="actions"><button class="btn" id="continue">Next</button><span class="small muted">moving on automatically…</span></div></div>';
       } else if (cur.result === "bad") {
         body += '<div class="feedback bad"><strong>Not quite.</strong> The answer is <b>' + escapeHtml(card.term) + "</b>. It goes back to the end of the round." +

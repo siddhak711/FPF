@@ -28,7 +28,11 @@ once you finish every term in a writing or both-rounds session with at least
    missed term, and a **Practice missed terms** button.
 
 Typed answers are checked case-insensitively, ignoring punctuation, accents,
-and extra spaces, and tolerating a trailing "s". Each card can list `alt`
+and extra spaces, and tolerating a trailing "s". Small typos are forgiven,
+scaled to length: none on words of 4 letters or fewer, 1 on 5 to 8 letters,
+2 on 9 to 14, 3 beyond that. A typo that exactly spells a different term in
+the set is never forgiven. Near misses are marked "Close enough" and show the
+exact spelling. Each card can list `alt`
 answers (e.g. `"Kant"` for `"Immanuel Kant"`). If the checker rejects an answer
 you think was right, use **Override: I was right**.
 
