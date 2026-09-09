@@ -24,7 +24,7 @@ window.VOCAB_SETS.push({
     { src: [0], term: "Hawkish",
       definition: "Describes a central bank stance that leans toward higher interest rates to fight inflation, even at the cost of slower growth; the opposite is dovish." },
     // ---------- GDP ----------
-    { src: [0, 1], term: "Gross domestic product", alt: ["GDP"],
+    { src: [0], term: "Gross domestic product", alt: ["GDP"],
       definition: "The market value of all final goods and services newly produced within a country's borders during a fixed period, before subtracting depreciation." },
     { src: [1], term: "Final goods", alt: ["Final good", "Final goods and services"],
       definition: "Goods and services bought by their end user rather than used up in making something else; only these are counted in GDP to avoid double counting." },
@@ -67,9 +67,9 @@ window.VOCAB_SETS.push({
       definition: "The official US accounts of GDP and its components, published by the BEA; each quarter's figure is released in three successive estimates, 1, 2, and 3 months after the quarter ends." },
     { src: [1], term: "Bureau of Economic Analysis", alt: ["BEA"],
       definition: "The US Commerce Department agency that produces the GDP and national income statistics." },
-    { src: [0, 1], term: "Bureau of Labor Statistics", alt: ["BLS"],
+    { src: [0], term: "Bureau of Labor Statistics", alt: ["BLS"],
       definition: "The US agency that produces the monthly employment report, the unemployment rate, and the consumer price index." },
-    { src: [0, 1], term: "FRED", alt: ["Federal Reserve Economic Database", "Federal Reserve Economic Data"],
+    { src: [0], term: "FRED", alt: ["Federal Reserve Economic Database", "Federal Reserve Economic Data"],
       definition: "The St. Louis Fed's free online database of economic time series, with graphing tools and Excel downloads; you look up series by code." },
     // ---------- prices vs quantities ----------
     { src: [1], term: "Nominal GDP", alt: ["GDP at current prices", "Current-dollar GDP"],
@@ -80,7 +80,7 @@ window.VOCAB_SETS.push({
       definition: "The reference year whose prices are used to value output and whose price index is set to 1 (or 100)." },
     { src: [1], term: "Price index",
       definition: "The price level in a given year divided by the price level in the base year; dividing nominal GDP by it gives real GDP." },
-    { src: [0, 1], term: "Inflation",
+    { src: [0], term: "Inflation",
       definition: "The percentage change in a price index between two consecutive periods." },
     { src: [1], term: "GDP deflator", alt: ["GDP price deflator", "Price deflator", "Implicit price deflator"],
       definition: "Nominal GDP divided by real GDP; a price index covering everything produced domestically, whose basket changes with what is actually produced." },
@@ -90,7 +90,7 @@ window.VOCAB_SETS.push({
       definition: "The distortion in fixed-basket measures that ignores buyers shifting toward goods whose relative prices fall; it makes fixed-weight real GDP growth depend on how far back the base year is." },
     { src: [1], term: "Chain-weighted real GDP", alt: ["Chain-weighted GDP", "Chained dollars", "Chain weighting"],
       definition: "Real GDP computed as a geometric average using two adjacent years' prices, so the base year updates continually; its components no longer add up exactly to the total." },
-    { src: [0, 1], term: "Purchasing power parity", alt: ["PPP", "Purchasing power adjustment"],
+    { src: [0], term: "Purchasing power parity", alt: ["PPP", "Purchasing power adjustment"],
       definition: "Valuing different countries' output at a common set of prices so that comparisons reflect quantities, not differences in the cost of living." },
     { src: [0], term: "GDP per capita", alt: ["Output per capita", "Per capita GDP"],
       definition: "Output divided by population; the scale used to compare how rich countries are rather than how big they are." },
@@ -113,7 +113,7 @@ window.VOCAB_SETS.push({
       definition: "The employed as a percentage of the adult population; it fell more in the pandemic than in any earlier recession and recovered quickly." },
     { src: [1], term: "Nonfarm payrolls", alt: ["Nonfarm payroll employment", "Payroll employment"],
       definition: "The headline monthly count of jobs at US employers excluding farms, reported by the BLS alongside the unemployment rate." },
-    { src: [0, 1], term: "Mankiw", kind: "person", alt: ["N. Gregory Mankiw", "Gregory Mankiw"],
+    { src: [0], term: "Mankiw", kind: "person", alt: ["N. Gregory Mankiw", "Gregory Mankiw"],
       definition: "Author of Macroeconomics, the course textbook; chapter 2 covers GDP, price indexes, and the labor market data." }
   ]
 });

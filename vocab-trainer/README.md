@@ -7,8 +7,8 @@ readings, lectures, or slides. No build step, no dependencies: open
 
 The home screen has a tab per course and lists each course's weeks with a
 status. Each week shows a switch per source material (reading, slides,
-lecture); switch one off and the terms that came only from it drop out of
-the session and the term list. A week is **cleared**
+lecture). Every term is attributed to exactly one source, the first material
+that covers it, so switching a source off removes exactly its terms. A week is **cleared**
 once you finish every term in a writing or both-rounds session with at least
 90% first-try accuracy. Progress is stored in your browser.
 
@@ -61,7 +61,6 @@ back so the set file can be updated for good.
      materials: ["reading.pdf", "lecture-2-transcript.txt", "slides-2.pdf"],
      cards: [
        { src: [0], term: "Term", definition: "What is shown as the prompt.", alt: ["other accepted spellings"] },
-       { src: [0, 1], term: "Term in both the reading and the slides", definition: "..." },
        { src: [1], term: "Some Philosopher", definition: "Who they were.", kind: "person" },
      ]
    });
