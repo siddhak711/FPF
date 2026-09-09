@@ -30,7 +30,7 @@
   var prefs = loadPrefs();
   var progress = loadJson("vocab-trainer-progress"); // setId -> { best, last, lastAt, sessions, cleared }
   var edits = loadJson("vocab-trainer-edits");       // setId -> { removed: [term], added: [{term, definition, alt}] }
-  var ui = { termsOpen: false, pendingRemove: null, exportOpen: false, addError: "", addDraft: { term: "", definition: "", alt: "" } };
+  var ui = { termsOpen: false, removedOpen: false, pendingRemove: null, exportOpen: false, addError: "", addDraft: { term: "", definition: "", alt: "" } };
   var session = null;      // active study session, or null on the home screen
   var advanceTimer = null; // pending auto-advance after a correct answer
 
@@ -395,7 +395,7 @@
     }).join("");
 
     var removed = e.removed.length
-      ? '<details class="removed"><summary>Removed terms (' + e.removed.length + ")</summary>" +
+      ? '<details class="removed"' + (ui.removedOpen ? " open" : "") + '><summary>Removed terms (' + e.removed.length + ")</summary>" +
         e.removed.map(function (t) {
           return '<div class="term-row"><div class="term-body"><b>' + escapeHtml(t) + '</b></div><button class="btn link small" data-restore="' + escapeHtml(t) + '">Restore</button></div>';
         }).join("") + "</details>"
@@ -424,6 +424,10 @@
 
   function renderHome() {
     $status.textContent = "";
+    // keep the term list and the page where they were across re-renders
+    var prevList = document.getElementById("term-list");
+    var listScroll = prevList ? prevList.scrollTop : 0;
+    var pageScroll = window.scrollY;
     if (!sets.length) {
       $app.innerHTML = '<div class="card"><h1>No term sets found</h1><p>Add a file under <code>sets/</code> and include it in <code>index.html</code>.</p></div>';
       return;
@@ -465,6 +469,9 @@
         ) : '<p class="muted">No weeks in this course yet.</p>') +
         '<p class="small muted" style="margin-top:24px">Keys <span class="kbd">1</span>–<span class="kbd">4</span> pick a choice. <span class="kbd">Enter</span> submits or continues.</p>' +
       "</div>";
+    var newList = document.getElementById("term-list");
+    if (newList) newList.scrollTop = listScroll;
+    window.scrollTo(0, pageScroll);
 
     // course + week selection
     Array.prototype.forEach.call($app.querySelectorAll("[data-course]"), function (btn) {
@@ -495,7 +502,7 @@
 
     // term list editing
     Array.prototype.forEach.call($app.querySelectorAll("[data-remove]"), function (btn) {
-      btn.onclick = function () { ui.pendingRemove = btn.getAttribute("data-remove"); render(); scrollToPending(); };
+      btn.onclick = function () { ui.pendingRemove = btn.getAttribute("data-remove"); render(); };
     });
     Array.prototype.forEach.call($app.querySelectorAll("[data-remove-confirm]"), function (btn) {
       btn.onclick = function () { removeTerm(set, btn.getAttribute("data-remove-confirm")); ui.pendingRemove = null; render(); };
@@ -519,15 +526,14 @@
         render();
         var f = document.getElementById("add-form");
         if (f) f.scrollIntoView({ block: "nearest" });
+        var t = document.getElementById("add-term");
+        if (t) t.focus();
       };
     }
+    var det = $app.querySelector("details.removed");
+    if (det) det.ontoggle = function () { ui.removedOpen = det.open; };
     var ex = document.getElementById("export-toggle");
     if (ex) ex.onclick = function () { ui.exportOpen = !ui.exportOpen; render(); };
-  }
-
-  function scrollToPending() {
-    var el = $app.querySelector(".term-row.pending");
-    if (el) el.scrollIntoView({ block: "nearest" });
   }
 
   function progressHtml() {
