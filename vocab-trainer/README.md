@@ -6,7 +6,9 @@ readings, lectures, or slides. No build step, no dependencies: open
 `index.html` in a browser or host it as a static site.
 
 The home screen has a tab per course and lists each course's weeks with a
-status. A week is **cleared**
+status. Each week shows a switch per source material (reading, slides,
+lecture); switch one off and the terms that came only from it drop out of
+the session and the term list. A week is **cleared**
 once you finish every term in a writing or both-rounds session with at least
 90% first-try accuracy. Progress is stored in your browser.
 
@@ -58,8 +60,9 @@ back so the set file can be updated for good.
      title: "What the week is about",
      materials: ["reading.pdf", "lecture-2-transcript.txt", "slides-2.pdf"],
      cards: [
-       { term: "Term", definition: "What is shown as the prompt.", alt: ["other accepted spellings"] },
-       { term: "Some Philosopher", definition: "Who they were.", kind: "person" },
+       { src: [0], term: "Term", definition: "What is shown as the prompt.", alt: ["other accepted spellings"] },
+       { src: [0, 1], term: "Term in both the reading and the slides", definition: "..." },
+       { src: [1], term: "Some Philosopher", definition: "Who they were.", kind: "person" },
      ]
    });
    ```

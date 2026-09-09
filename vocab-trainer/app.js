@@ -43,7 +43,7 @@
     try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* ignore */ }
   }
   function loadPrefs() {
-    var p = { setId: null, course: null, shuffle: true, batchSize: DEFAULT_BATCH_SIZE, includePeople: false, mode: "both" };
+    var p = { setId: null, course: null, shuffle: true, batchSize: DEFAULT_BATCH_SIZE, includePeople: false, mode: "both", sourcesOff: {} };
     var saved = loadJson("vocab-trainer-prefs");
     if (saved.setId && sets.some(function (s) { return s.id === saved.setId; })) p.setId = saved.setId;
     if (typeof saved.course === "string") p.course = saved.course;
@@ -51,6 +51,7 @@
     if (typeof saved.includePeople === "boolean") p.includePeople = saved.includePeople;
     if (saved.mode === "both" || saved.mode === "write" || saved.mode === "mc") p.mode = saved.mode;
     if (saved.batchSize >= 1 && saved.batchSize <= 100) p.batchSize = saved.batchSize;
+    if (saved.sourcesOff && typeof saved.sourcesOff === "object") p.sourcesOff = saved.sourcesOff;
     return p;
   }
   function savePrefs() { saveJson("vocab-trainer-prefs", prefs); }
@@ -115,10 +116,34 @@
     return "";
   }
 
-  // Indices (into effectiveCards) this session draws from: concepts, plus people if enabled.
-  function poolFor(cards) {
+  // Source materials of a set can be switched off; a card stays in play while
+  // any of its sources is on. Cards without `src` (e.g. the owner's additions) always stay.
+  function sourceOn(set, i) {
+    var off = prefs.sourcesOff[set.id] || [];
+    return off.indexOf(i) < 0;
+  }
+  function toggleSource(set, i, on) {
+    var off = (prefs.sourcesOff[set.id] || []).filter(function (x) { return x !== i; });
+    if (!on) off.push(i);
+    prefs.sourcesOff[set.id] = off;
+    savePrefs();
+  }
+  function cardInSources(set, c) {
+    if (!c.src || !c.src.length) return true;
+    return c.src.some(function (i) { return sourceOn(set, i); });
+  }
+  function materialName(file) {
+    return String(file).replace(/\.[a-z0-9]+$/i, "").replace(/[_]+/g, " ").replace(/\s+/g, " ").trim();
+  }
+
+  // Indices (into effectiveCards) this session draws from: cards from enabled
+  // sources, concepts only unless people are enabled.
+  function poolFor(set, cards) {
     var out = [];
-    cards.forEach(function (c, i) { if (prefs.includePeople || !isPerson(c)) out.push(i); });
+    cards.forEach(function (c, i) {
+      if (!cardInSources(set, c)) return;
+      if (prefs.includePeople || !isPerson(c)) out.push(i);
+    });
     return out;
   }
 
@@ -413,7 +438,7 @@
   function weekListHtml(course, set) {
     return '<div class="weeks">' + setsForCourse(course).map(function (s) {
       var st = statusOf(s);
-      var n = effectiveCards(s).filter(function (c) { return !isPerson(c); }).length;
+      var n = effectiveCards(s).filter(function (c) { return !isPerson(c) && cardInSources(s, c); }).length;
       return '<button class="week' + (set && s.id === set.id ? " selected" : "") + '" data-set="' + escapeHtml(s.id) + '">' +
         '<span class="week-name">' + escapeHtml(setName(s)) + "<small>" + n + " terms</small></span>" +
         '<span class="week-right"><span class="badge ' + st.key + '"><i></i>' + st.label + '</span><span class="chev"></span></span></button>';
@@ -473,8 +498,17 @@
     var course = currentCourse();
     var set = currentSet();
     var cards = set ? effectiveCards(set) : [];
-    var pool = set ? poolFor(cards) : [];
-    var people = cards.filter(isPerson).length;
+    var pool = set ? poolFor(set, cards) : [];
+    var people = cards.filter(function (c) { return isPerson(c) && cardInSources(set, c); }).length;
+    var sourcesHtml = "";
+    if (set && set.materials && set.materials.length) {
+      sourcesHtml = '<label class="field"><span>Sources</span></label><div class="toggles sources">' +
+        set.materials.map(function (file, i) {
+          var n = cards.filter(function (c) { return c.src && c.src.indexOf(i) >= 0 && (prefs.includePeople || !isPerson(c)); }).length;
+          return '<label class="check"><input type="checkbox" data-source="' + i + '"' + (sourceOn(set, i) ? " checked" : "") + "> " +
+            escapeHtml(materialName(file)) + ' <span class="muted small">' + n + " terms</span></label>";
+        }).join("") + "</div>";
+    }
     var batches = Math.ceil(pool.length / prefs.batchSize);
 
     $app.innerHTML =
@@ -486,7 +520,7 @@
         weekListHtml(course, set) +
         (set ? (
           '<h2 style="margin-top:28px">' + escapeHtml(setName(set)) + "</h2>" +
-          (set.materials && set.materials.length ? '<p class="small muted">Covers ' + set.materials.map(escapeHtml).join(", ") + "</p>" : "") +
+          sourcesHtml +
           '<label class="field"><span>Study mode</span></label>' +
           '<div class="segmented" id="mode">' +
             '<button data-mode="both" class="' + (prefs.mode === "both" ? "active" : "") + '">Multiple choice, then writing</button>' +
@@ -530,11 +564,14 @@
       savePrefs(); render();
     };
     document.getElementById("shuffle").onchange = function (e) { prefs.shuffle = e.target.checked; savePrefs(); };
+    Array.prototype.forEach.call($app.querySelectorAll("[data-source]"), function (box) {
+      box.onchange = function () { toggleSource(set, parseInt(box.getAttribute("data-source"), 10), box.checked); render(); };
+    });
     var inc = document.getElementById("include-people");
     if (inc) inc.onchange = function (e) { prefs.includePeople = e.target.checked; savePrefs(); render(); };
     document.getElementById("toggle-terms").onclick = function () { ui.termsOpen = !ui.termsOpen; ui.pendingRemove = null; render(); };
     document.getElementById("start").onclick = function () {
-      var c = effectiveCards(set), p = poolFor(c);
+      var c = effectiveCards(set), p = poolFor(set, c);
       startSession(set, c, p, p);
     };
 

@@ -175,6 +175,8 @@ input[type="number"] { font-variant-numeric: tabular-nums; }
 .check input:checked { background: #34c759; }
 .check input:checked::after { transform: translateX(16px); }
 .toggles { display: flex; flex-direction: column; gap: 12px; }
+.toggles.sources { margin-top: 2px; }
+.toggles.sources .check { align-items: center; }
 
 .btn {
   font-size: 15px; font-weight: 600;
