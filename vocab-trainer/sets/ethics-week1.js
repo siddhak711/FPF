@@ -1,5 +1,6 @@
 // Week 1: An Introduction to Ethics (based on Kwame Anthony Appiah,
-// "Thinking It Through" ch. 5 and "Experiments in Ethics" ch. 2).
+// "Thinking It Through" ch. 5 and "Experiments in Ethics" ch. 2) and
+// Appiah, "Cross-cultural Conversation" (from Cosmopolitanism, 2006).
 //
 // Each card: { term, definition, alt?, kind? }
 //   term       – what you must type
@@ -12,8 +13,8 @@ window.VOCAB_SETS.push({
   id: "ethics-week1",
   course: "Ethics",
   week: 1,
-  title: "An Introduction to Ethics",
-  materials: ["Week_1_An_Introduction_to_Ethics.pdf"],
+  title: "Introduction and Cross-Cultural Conversation",
+  materials: ["Week_1_An_Introduction_to_Ethics.pdf", "Week_1_Appiah_CrossCultural_Conversation__Global_Ethics.pdf"],
   cards: [
     // ---------- Part I: Meta-ethics ----------
     { term: "Euthanasia",
@@ -189,6 +190,35 @@ window.VOCAB_SETS.push({
     { kind: "person", term: "Georg Wilhelm Friedrich Hegel", alt: ["Hegel", "G. W. F. Hegel", "GWF Hegel"],
       definition: "German philosopher (1770-1831) who famously said that tragedy involves the clash not between good and evil but between two goods." },
     { term: "Practical agreement",
-      definition: "Agreeing about what to do even when we do not agree why we should do it (e.g. agreeing with the Akan that incest is wrong without accepting their explanation)." }
+      definition: "Agreeing about what to do even when we do not agree why we should do it (e.g. agreeing with the Akan that incest is wrong without accepting their explanation)." },
+    // ---------- Cross-cultural conversation (Appiah) ----------
+    { term: "Cross-cultural conversation", alt: ["Cross cultural conversation", "Conversation across cultures"],
+      definition: "Talk between people of different societies whose value is not reaching agreement but getting used to one another, so that they can disagree without being disagreeable; modelled on ordinary talk among friends, not on a sermon." },
+    { term: "Cultural relativism", alt: ["Cultural relativism about morality"],
+      definition: "The claim that moral beliefs can only be evaluated from within a shared cultural framework, so moral disagreements across cultures cannot be rationally resolved and conversation about them is pointless." },
+    { term: "True-for", alt: ["True for", "True-for-me", "True for me", "Relative truth"],
+      definition: "The relativist's fallback that a moral claim can hold for one person and not another; it fails for moral judgments, since judging an act wrong commits you to wanting everyone to avoid it and believe it wrong." },
+    { term: "Moral anti-realism", alt: ["Anti-realism", "Antirealism", "Moral antirealism"],
+      definition: "The view that no independent moral reality constrains our moral beliefs, so we cannot appeal to features of the world to persuade one another about morality." },
+    { term: "Open-textured", alt: ["Open textured", "Open texture"],
+      definition: "Said of evaluative language where two people who both know what a word means can still reasonably disagree about whether it applies to a particular case; knowing the meaning gives no rule that settles every case." },
+    { term: "Disgust",
+      definition: "An evolved response, tied to nausea, that helped an omnivorous species sort what to eat from what to avoid; culture can extend it to people and acts, which may underlie taboo reactions." },
+    { term: "Junzi", alt: ["Jūnzi", "君子", "Confucian gentleman"],
+      definition: "Confucius's ideal person, often translated \"gentleman\": generous to those who have done well by him, free of vindictiveness and avarice, courageous, wise, and true to his word." },
+    { term: "Incompletely theorized agreements", alt: ["Incompletely theorized agreement"],
+      definition: "Sunstein's term for agreeing on a practice or outcome, such as that banning mosques would be wrong, without agreeing on the theory or values that justify it." },
+    { term: "Modus vivendi",
+      definition: "A way of living together that works without the parties agreeing on a shared set of fundamental values, as Jews and Christians did under Muslim rule in medieval Spain." },
+    { term: "Paul Rozin", kind: "person", alt: ["Rozin"],
+      definition: "Psychologist whose cockroach-in-orange-juice experiments showed that disgust is a deep human trait not explained by the reasons people give for it." },
+    { term: "H. L. A. Hart", kind: "person", alt: ["Hart", "HLA Hart", "Herbert Hart"],
+      definition: "Legal philosopher, author of The Concept of Law, who applied the idea of open-textured language to legal and evaluative terms." },
+    { term: "Cass Sunstein", kind: "person", alt: ["Sunstein"],
+      definition: "Legal theorist who described American constitutional law as a set of incompletely theorized agreements." },
+    { term: "Charles Black", kind: "person", alt: ["Charles L. Black", "Black"],
+      definition: "Legal scholar who argued that caprice and mistake are inevitable in capital trials, so the risk of killing an innocent person is too great to accept." },
+    { term: "Cosmopolitanism: Ethics in a World of Strangers", kind: "person", alt: ["Cosmopolitanism"],
+      definition: "Appiah's 2006 book from which the cross-cultural conversation lecture draws its central arguments." }
   ]
 });
